@@ -1,11 +1,9 @@
 services:
   web:
-    image: kan-web-local
+    image: ghcr.io/celuppi/gaminho:v1
     container_name: ${CONTAINER_NAME:-kan-web}
 
-    build:
-      context: .
-      dockerfile: ./apps/web/Dockerfile
+
     env_file:
       - .env
     environment:
@@ -104,4 +102,4 @@ services:
       - APPLE_APP_BUNDLE_IDENTIFIER=${APPLE_APP_BUNDLE_IDENTIFIER}
 
     restart: unless-stopped
-
+    
