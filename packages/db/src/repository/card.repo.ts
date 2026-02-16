@@ -536,6 +536,7 @@ export const getWithListAndMembersByPublicId = async (
             columns: {
               publicId: true,
               email: true,
+              deletedAt: true,
             },
             with: {
               user: {

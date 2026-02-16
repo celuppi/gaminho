@@ -18,17 +18,33 @@ export default function CardDropdown({
   isTemplate,
   boardPublicId,
   cardCreatedBy,
+  cardMembers,
 }: {
   cardPublicId: string;
   isTemplate?: boolean;
   boardPublicId?: string;
   cardCreatedBy?: string | null;
+  cardMembers?: { user: { id: string } | null }[];
 }) {
   const { openModal } = useModal();
   const { showPopup } = usePopup();
-  const { canEditCard, canDeleteCard } = usePermissions();
+  const {
+    canEditCard,
+    canEditOwnCard,
+    canEditAssignedCard,
+    canDeleteCard,
+    canDeleteOwnCard,
+  } = usePermissions();
   const { data: session } = authClient.useSession();
   const isCreator = cardCreatedBy && session?.user.id === cardCreatedBy;
+  const isMember = cardMembers?.some(
+    (member) => member.user?.id === session?.user.id,
+  );
+
+  const canEdit =
+    canEditCard ||
+    (canEditOwnCard && isCreator) ||
+    (canEditAssignedCard && isMember);
 
   const handleCopyCardLink = async () => {
     const path =
@@ -59,7 +75,7 @@ export default function CardDropdown({
       action: handleCopyCardLink,
       icon: <HiLink className="h-[16px] w-[16px] text-dark-900" />,
     },
-    ...(canEditCard
+    ...(canEdit
       ? [
           {
             label: t`Add checklist`,
@@ -70,7 +86,7 @@ export default function CardDropdown({
           },
         ]
       : []),
-    ...(canDeleteCard || isCreator
+    ...(canDeleteCard || (canDeleteOwnCard && isCreator)
       ? [
           {
             label: t`Delete card`,

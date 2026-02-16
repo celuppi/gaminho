@@ -51,8 +51,8 @@ const config = {
           hostname: "*.googleusercontent.com",
         },
         {
-          protocol: 'https',
-          hostname: 'cdn.discordapp.com',
+          protocol: "https",
+          hostname: "cdn.discordapp.com",
         },
       ];
 

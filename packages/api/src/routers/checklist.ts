@@ -5,8 +5,10 @@ import * as cardRepo from "@kan/db/repository/card.repo";
 import * as cardActivityRepo from "@kan/db/repository/cardActivity.repo";
 import * as checklistRepo from "@kan/db/repository/checklist.repo";
 
+import * as permissionRepo from "@kan/db/repository/permission.repo";
+
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { assertPermission } from "../utils/permissions";
+import { assertCanEdit } from "../utils/permissions";
 
 const checklistSchema = z.object({
   publicId: z.string().length(12),
@@ -57,7 +59,31 @@ export const checklistRouter = createTRPCRouter({
           message: `Card with public ID ${input.cardPublicId} not found`,
           code: "NOT_FOUND",
         });
-      await assertPermission(ctx.db, userId, card.workspaceId, "card:edit");
+      const currentMember = await permissionRepo.getMemberWithRole(
+        ctx.db,
+        userId,
+        card.workspaceId,
+      );
+
+      if (!currentMember)
+        throw new TRPCError({
+          message: `User is not a member of the workspace`,
+          code: "FORBIDDEN",
+        });
+
+      const isAssigned = await cardRepo.getCardMemberRelationship(ctx.db, {
+        cardId: card.id,
+        memberId: currentMember.id,
+      });
+
+      await assertCanEdit(
+        ctx.db,
+        userId,
+        card.workspaceId,
+        "card:edit",
+        card.createdBy,
+        !!isAssigned,
+      );
 
       const newChecklist = await checklistRepo.create(ctx.db, {
         name: input.name,
@@ -105,11 +131,30 @@ export const checklistRouter = createTRPCRouter({
           message: `Checklist with public ID ${input.checklistPublicId} not found`,
           code: "NOT_FOUND",
         });
-      await assertPermission(
+      const currentMember = await permissionRepo.getMemberWithRole(
+        ctx.db,
+        userId,
+        checklist.card.list.board.workspace.id,
+      );
+
+      if (!currentMember)
+        throw new TRPCError({
+          message: `User is not a member of the workspace`,
+          code: "FORBIDDEN",
+        });
+
+      const isAssigned = await cardRepo.getCardMemberRelationship(ctx.db, {
+        cardId: checklist.card.id,
+        memberId: currentMember.id,
+      });
+
+      await assertCanEdit(
         ctx.db,
         userId,
         checklist.card.list.board.workspace.id,
         "card:edit",
+        checklist.card.createdBy,
+        !!isAssigned,
       );
 
       const previousName = checklist.name;
@@ -165,11 +210,30 @@ export const checklistRouter = createTRPCRouter({
           message: `Checklist with public ID ${input.checklistPublicId} not found`,
           code: "NOT_FOUND",
         });
-      await assertPermission(
+      const currentMember = await permissionRepo.getMemberWithRole(
+        ctx.db,
+        userId,
+        checklist.card.list.board.workspace.id,
+      );
+
+      if (!currentMember)
+        throw new TRPCError({
+          message: `User is not a member of the workspace`,
+          code: "FORBIDDEN",
+        });
+
+      const isAssigned = await cardRepo.getCardMemberRelationship(ctx.db, {
+        cardId: checklist.card.id,
+        memberId: currentMember.id,
+      });
+
+      await assertCanEdit(
         ctx.db,
         userId,
         checklist.card.list.board.workspace.id,
         "card:edit",
+        checklist.card.createdBy,
+        !!isAssigned,
       );
 
       await checklistRepo.softDeleteAllItemsByChecklistId(ctx.db, {
@@ -236,11 +300,30 @@ export const checklistRouter = createTRPCRouter({
           message: `Checklist with public ID ${input.checklistPublicId} not found`,
           code: "NOT_FOUND",
         });
-      await assertPermission(
+      const currentMember = await permissionRepo.getMemberWithRole(
+        ctx.db,
+        userId,
+        checklist.card.list.board.workspace.id,
+      );
+
+      if (!currentMember)
+        throw new TRPCError({
+          message: `User is not a member of the workspace`,
+          code: "FORBIDDEN",
+        });
+
+      const isAssigned = await cardRepo.getCardMemberRelationship(ctx.db, {
+        cardId: checklist.card.id,
+        memberId: currentMember.id,
+      });
+
+      await assertCanEdit(
         ctx.db,
         userId,
         checklist.card.list.board.workspace.id,
         "card:edit",
+        checklist.card.createdBy,
+        !!isAssigned,
       );
 
       const newChecklistItem = await checklistRepo.createItem(ctx.db, {
@@ -303,11 +386,30 @@ export const checklistRouter = createTRPCRouter({
           message: `Checklist item with public ID ${input.checklistItemPublicId} not found`,
           code: "NOT_FOUND",
         });
-      await assertPermission(
+      const currentMember = await permissionRepo.getMemberWithRole(
+        ctx.db,
+        userId,
+        item.checklist.card.list.board.workspace.id,
+      );
+
+      if (!currentMember)
+        throw new TRPCError({
+          message: `User is not a member of the workspace`,
+          code: "FORBIDDEN",
+        });
+
+      const isAssigned = await cardRepo.getCardMemberRelationship(ctx.db, {
+        cardId: item.checklist.card.id,
+        memberId: currentMember.id,
+      });
+
+      await assertCanEdit(
         ctx.db,
         userId,
         item.checklist.card.list.board.workspace.id,
         "card:edit",
+        item.checklist.card.createdBy,
+        !!isAssigned,
       );
 
       const previousTitle = item.title;
@@ -393,11 +495,30 @@ export const checklistRouter = createTRPCRouter({
           message: `Checklist item with public ID ${input.checklistItemPublicId} not found`,
           code: "NOT_FOUND",
         });
-      await assertPermission(
+      const currentMember = await permissionRepo.getMemberWithRole(
+        ctx.db,
+        userId,
+        item.checklist.card.list.board.workspace.id,
+      );
+
+      if (!currentMember)
+        throw new TRPCError({
+          message: `User is not a member of the workspace`,
+          code: "FORBIDDEN",
+        });
+
+      const isAssigned = await cardRepo.getCardMemberRelationship(ctx.db, {
+        cardId: item.checklist.card.id,
+        memberId: currentMember.id,
+      });
+
+      await assertCanEdit(
         ctx.db,
         userId,
         item.checklist.card.list.board.workspace.id,
         "card:edit",
+        item.checklist.card.createdBy,
+        !!isAssigned,
       );
 
       const deleted = await checklistRepo.softDeleteItemById(ctx.db, {

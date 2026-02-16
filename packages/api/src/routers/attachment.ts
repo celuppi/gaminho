@@ -7,8 +7,10 @@ import * as cardAttachmentRepo from "@kan/db/repository/cardAttachment.repo";
 import * as workspaceRepo from "@kan/db/repository/workspace.repo";
 import { generateUID } from "@kan/shared/utils";
 
+import * as permissionRepo from "@kan/db/repository/permission.repo";
+
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { assertPermission } from "../utils/permissions";
+import { assertCanEdit } from "../utils/permissions";
 import { deleteObject, generateUploadUrl } from "@kan/shared/utils";
 
 export const attachmentRouter = createTRPCRouter({
@@ -55,7 +57,31 @@ export const attachmentRouter = createTRPCRouter({
           message: `Card with public ID ${input.cardPublicId} not found`,
           code: "NOT_FOUND",
         });
-      await assertPermission(ctx.db, userId, card.workspaceId, "card:edit");
+      const currentMember = await permissionRepo.getMemberWithRole(
+        ctx.db,
+        userId,
+        card.workspaceId,
+      );
+
+      if (!currentMember)
+        throw new TRPCError({
+          message: `User is not a member of the workspace`,
+          code: "FORBIDDEN",
+        });
+
+      const isAssigned = await cardRepo.getCardMemberRelationship(ctx.db, {
+        cardId: card.id,
+        memberId: currentMember.id,
+      });
+
+      await assertCanEdit(
+        ctx.db,
+        userId,
+        card.workspaceId,
+        "card:edit",
+        card.createdBy,
+        !!isAssigned,
+      );
 
       // Get workspace publicId
       const workspace = await workspaceRepo.getById(ctx.db, card.workspaceId);
@@ -130,7 +156,31 @@ export const attachmentRouter = createTRPCRouter({
           message: `Card with public ID ${input.cardPublicId} not found`,
           code: "NOT_FOUND",
         });
-      await assertPermission(ctx.db, userId, card.workspaceId, "card:edit");
+      const currentMember = await permissionRepo.getMemberWithRole(
+        ctx.db,
+        userId,
+        card.workspaceId,
+      );
+
+      if (!currentMember)
+        throw new TRPCError({
+          message: `User is not a member of the workspace`,
+          code: "FORBIDDEN",
+        });
+
+      const isAssigned = await cardRepo.getCardMemberRelationship(ctx.db, {
+        cardId: card.id,
+        memberId: currentMember.id,
+      });
+
+      await assertCanEdit(
+        ctx.db,
+        userId,
+        card.workspaceId,
+        "card:edit",
+        card.createdBy,
+        !!isAssigned,
+      );
 
       const attachment = await cardAttachmentRepo.create(ctx.db, {
         cardId: card.id,
@@ -184,7 +234,31 @@ export const attachmentRouter = createTRPCRouter({
         });
 
       const workspaceId = attachment.card.list.board.workspaceId;
-      await assertPermission(ctx.db, userId, workspaceId, "card:edit");
+      const currentMember = await permissionRepo.getMemberWithRole(
+        ctx.db,
+        userId,
+        workspaceId,
+      );
+
+      if (!currentMember)
+        throw new TRPCError({
+          message: `User is not a member of the workspace`,
+          code: "FORBIDDEN",
+        });
+
+      const isAssigned = await cardRepo.getCardMemberRelationship(ctx.db, {
+        cardId: attachment.card.id,
+        memberId: currentMember.id,
+      });
+
+      await assertCanEdit(
+        ctx.db,
+        userId,
+        workspaceId,
+        "card:edit",
+        attachment.card.createdBy,
+        !!isAssigned,
+      );
 
       const bucket = process.env.NEXT_PUBLIC_ATTACHMENTS_BUCKET_NAME;
       if (bucket) {

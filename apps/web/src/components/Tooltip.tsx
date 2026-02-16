@@ -42,7 +42,9 @@ export function Tooltip({
 
     return () => {
       instance.destroy();
-      rootRef.current?.unmount();
+      setTimeout(() => {
+        rootRef.current?.unmount();
+      }, 0);
     };
   }, [content, placement, delay]);
 

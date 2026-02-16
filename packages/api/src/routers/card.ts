@@ -6,6 +6,7 @@ import * as cardActivityRepo from "@kan/db/repository/cardActivity.repo";
 import * as cardCommentRepo from "@kan/db/repository/cardComment.repo";
 import * as labelRepo from "@kan/db/repository/label.repo";
 import * as listRepo from "@kan/db/repository/list.repo";
+import * as permissionRepo from "@kan/db/repository/permission.repo";
 import * as workspaceRepo from "@kan/db/repository/workspace.repo";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
@@ -444,7 +445,31 @@ export const cardRouter = createTRPCRouter({
           code: "NOT_FOUND",
         });
 
-      await assertPermission(ctx.db, userId, card.workspaceId, "card:edit");
+      const currentMember = await permissionRepo.getMemberWithRole(
+        ctx.db,
+        userId,
+        card.workspaceId,
+      );
+
+      if (!currentMember)
+        throw new TRPCError({
+          message: `User is not a member of the workspace`,
+          code: "FORBIDDEN",
+        });
+
+      const isAssigned = await cardRepo.getCardMemberRelationship(ctx.db, {
+        cardId: card.id,
+        memberId: currentMember.id,
+      });
+
+      await assertCanEdit(
+        ctx.db,
+        userId,
+        card.workspaceId,
+        "card:edit",
+        card.createdBy,
+        !!isAssigned,
+      );
 
       const label = await labelRepo.getByPublicId(ctx.db, input.labelPublicId);
 
@@ -536,7 +561,31 @@ export const cardRouter = createTRPCRouter({
           code: "NOT_FOUND",
         });
 
-      await assertPermission(ctx.db, userId, card.workspaceId, "card:edit");
+      const currentMember = await permissionRepo.getMemberWithRole(
+        ctx.db,
+        userId,
+        card.workspaceId,
+      );
+
+      if (!currentMember)
+        throw new TRPCError({
+          message: `User is not a member of the workspace`,
+          code: "FORBIDDEN",
+        });
+
+      const isAssigned = await cardRepo.getCardMemberRelationship(ctx.db, {
+        cardId: card.id,
+        memberId: currentMember.id,
+      });
+
+      await assertCanEdit(
+        ctx.db,
+        userId,
+        card.workspaceId,
+        "card:edit",
+        card.createdBy,
+        !!isAssigned,
+      );
 
       const member = await workspaceRepo.getMemberByPublicId(
         ctx.db,
@@ -678,31 +727,32 @@ export const cardRouter = createTRPCRouter({
       );
 
       // Generate presigned URLs for workspace member avatars
-      const workspaceWithAvatarUrls = result.list.board.workspace
-        ? {
-            ...result.list.board.workspace,
-            members: await Promise.all(
-              result.list.board.workspace.members.map(async (member) => {
-                if (!member.user?.image) {
-                  return member;
-                }
+      const workspaceWithAvatarUrls = {
+        ...result.list.board.workspace,
+        members: await Promise.all(
+          result.list.board.workspace.members.map(async (member) => {
+            if (!member.user?.image) {
+              return member;
+            }
 
-                const avatarUrl = await generateAvatarUrl(member.user.image);
-                return {
-                  ...member,
-                  user: {
-                    ...member.user,
-                    image: avatarUrl,
-                  },
-                };
-              }),
-            ),
-          }
-        : result.list.board.workspace;
+            const avatarUrl = await generateAvatarUrl(member.user.image);
+            return {
+              ...member,
+              user: {
+                ...member.user,
+                image: avatarUrl,
+              },
+            };
+          }),
+        ),
+      };
 
       return {
         ...result,
         attachments: attachmentsWithUrls,
+        members: result.members.filter(
+          (member) => member.deletedAt === null,
+        ),
         list: {
           ...result.list,
           board: {
@@ -861,12 +911,30 @@ export const cardRouter = createTRPCRouter({
           code: "NOT_FOUND",
         });
 
+      const member = await permissionRepo.getMemberWithRole(
+        ctx.db,
+        userId,
+        card.workspaceId,
+      );
+
+      if (!member)
+        throw new TRPCError({
+          message: `User is not a member of the workspace`,
+          code: "FORBIDDEN",
+        });
+
+      const isAssigned = await cardRepo.getCardMemberRelationship(ctx.db, {
+        cardId: card.id,
+        memberId: member.id,
+      });
+
       await assertCanEdit(
         ctx.db,
         userId,
         card.workspaceId,
         "card:edit",
         card.createdBy,
+        !!isAssigned,
       );
 
       const existingCard = await cardRepo.getByPublicId(

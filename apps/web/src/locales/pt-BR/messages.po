@@ -3088,3 +3088,18 @@ msgstr "O slug do seu workspace foi atualizado."
 #: src/components/YouTubeEmbed/EditYouTubeModal.tsx:147
 msgid "YouTube URL"
 msgstr "URL do YouTube"
+
+#: src/views/members/components/EditMemberPermissionsModal.tsx:143
+#: src/views/settings/components/RolePermissions.tsx:32
+msgid "Can edit own cards"
+msgstr "Pode editar seus próprios cartões"
+
+#: src/views/members/components/EditMemberPermissionsModal.tsx:144
+#: src/views/settings/components/RolePermissions.tsx:33
+msgid "Can edit assigned cards"
+msgstr "Pode editar cartões atribuídos"
+
+#: src/views/members/components/EditMemberPermissionsModal.tsx:146
+#: src/views/settings/components/RolePermissions.tsx:35
+msgid "Can delete own cards"
+msgstr "Pode excluir seus próprios cartões"

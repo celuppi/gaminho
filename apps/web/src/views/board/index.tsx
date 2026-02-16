@@ -15,6 +15,8 @@ import {
 
 import type { UpdateBoardInput } from "@kan/api/types";
 
+import { authClient } from "@kan/auth/client";
+
 import Button from "~/components/Button";
 import { DeleteLabelConfirmation } from "~/components/DeleteLabelConfirmation";
 import { LabelForm } from "~/components/LabelForm";
@@ -64,8 +66,15 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
     direction: "horizontal",
   });
 
-  const { canCreateList, canEditList, canEditCard, canEditBoard } =
-    usePermissions();
+  const {
+    canCreateList,
+    canEditList,
+    canEditCard,
+    canEditOwnCard,
+    canEditAssignedCard,
+    canEditBoard,
+  } = usePermissions();
+  const { data: session } = authClient.useSession();
 
   const { tooltipContent: createListShortcutTooltipContent } =
     useKeyboardShortcut({
@@ -271,13 +280,28 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
       });
     }
 
-    if (type === "CARD" && canEditCard) {
-      updateCardMutation.mutate({
-        cardPublicId: draggableId,
+    if (type === "CARD") {
+      const card = boardData?.allLists
+        .flatMap((l) => l.cards)
+        .find((c) => c.publicId === draggableId);
+      const isCreator =
+        card?.createdBy && session?.user.id === card.createdBy;
+      const isMember = card?.members.some(
+        (member) => member.user?.id === session?.user.id,
+      );
+      const canEdit =
+        canEditCard ||
+        (canEditOwnCard && isCreator) ||
+        (canEditAssignedCard && isMember);
 
-        listPublicId: destination.droppableId,
-        index: destination.index,
-      });
+      if (canEdit) {
+        updateCardMutation.mutate({
+          cardPublicId: draggableId,
+
+          listPublicId: destination.droppableId,
+          index: destination.index,
+        });
+      }
     }
   };
 
@@ -580,7 +604,16 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                                       key={card.publicId}
                                       draggableId={card.publicId}
                                       index={index}
-                                      isDragDisabled={!canEditCard}
+                                      isDragDisabled={
+                                        !(
+                                          canEditCard ||
+                                          (canEditAssignedCard &&
+                                            card.members.some(
+                                              (m) =>
+                                                m.user?.id === session?.user.id,
+                                            ))
+                                        )
+                                      }
                                     >
                                       {(provided) => (
                                         <Link

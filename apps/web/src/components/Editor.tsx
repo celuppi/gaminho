@@ -572,9 +572,17 @@ export default function Editor({
       },
       editable: !readOnly,
       injectCSS: false,
+      immediatelyRender: false,
     },
     [], // creating the editor only once
   );
+
+  // Sync editable state with readOnly prop
+  useEffect(() => {
+    if (editor) {
+      editor.setEditable(!readOnly);
+    }
+  }, [editor, readOnly]);
 
   // this will sync external content changes without re-creating the editor instance
   useEffect(() => {
@@ -597,6 +605,7 @@ export default function Editor({
         }
         .tiptap p {
           margin: 0 0 1rem 0 !important;
+          white-space: pre-wrap;
         }
         .tiptap .mention {
           background-color: rgba(59, 130, 246, 0.1);
@@ -610,7 +619,7 @@ export default function Editor({
           margin: 1rem 0;
         }
       `}</style>
-      {!readOnly && editor && <EditorBubbleMenu editor={editor} />}
+      {editor && <EditorBubbleMenu editor={editor} />}
       <EditorContent
         editor={editor}
         className="prose dark:prose-invert prose-sm max-w-none overflow-y-auto [&_blockquote]:!text-xs [&_h1]:!text-lg [&_h2]:!text-base [&_h3]:!text-sm [&_ol]:!text-xs [&_p.is-empty::before]:text-light-900 [&_p.is-empty::before]:dark:text-dark-800 [&_p]:!text-sm [&_p]:text-light-950 [&_p]:dark:text-dark-950 [&_ul]:!text-xs"

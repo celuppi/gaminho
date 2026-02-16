@@ -252,9 +252,17 @@ export async function assertCanDelete(
     return;
   }
 
-  // If user doesn't have permission, check if they are the creator
+  // If user doesn't have permission, check if they are the creator AND have the "own" permission
   if (createdBy && createdBy === userId) {
-    return;
+    const hasOwnPermission = await hasPermission(
+      db,
+      userId,
+      workspaceId,
+      "card:delete_own",
+    );
+    if (hasOwnPermission) {
+      return;
+    }
   }
 
   // Neither condition met - deny deletion
@@ -273,6 +281,7 @@ export async function assertCanEdit(
   workspaceId: number,
   permission: Permission,
   createdBy: string | null,
+  isAssigned?: boolean,
 ): Promise<void> {
   // Check if user has the general edit permission
   const hasEditPermission = await hasPermission(db, userId, workspaceId, permission);
@@ -282,9 +291,30 @@ export async function assertCanEdit(
     return;
   }
 
-  // If user doesn't have permission, check if they are the creator
+  // If user doesn't have permission, check if they are the creator AND have the "own" permission
   if (createdBy && createdBy === userId) {
-    return;
+    const hasOwnPermission = await hasPermission(
+      db,
+      userId,
+      workspaceId,
+      "card:edit_own",
+    );
+    if (hasOwnPermission) {
+      return;
+    }
+  }
+
+  // If user doesn't have permission, check if they are assigned AND have the "assigned" permission
+  if (isAssigned) {
+    const hasAssignedPermission = await hasPermission(
+      db,
+      userId,
+      workspaceId,
+      "card:edit_assigned",
+    );
+    if (hasAssignedPermission) {
+      return;
+    }
   }
 
   // Neither condition met - deny editing

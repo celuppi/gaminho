@@ -48,7 +48,7 @@ interface FormValues {
 
 export function CardRightPanel({ isTemplate }: { isTemplate?: boolean }) {
   const router = useRouter();
-  const { canEditCard } = usePermissions();
+  const { canEditCard, canEditAssignedCard } = usePermissions();
   const { data: session } = authClient.useSession();
   const cardId = Array.isArray(router.query.cardId)
     ? router.query.cardId[0]
@@ -60,7 +60,11 @@ export function CardRightPanel({ isTemplate }: { isTemplate?: boolean }) {
   );
 
   const isCreator = card?.createdBy && session?.user.id === card.createdBy;
-  const canEdit = canEditCard || isCreator;
+  const isMember = card?.members.some(
+    (member) => member.user?.id === session?.user.id,
+  );
+  const canEdit =
+    canEditCard || isCreator || (canEditAssignedCard && isMember);
 
   const board = card?.list.board;
   const labels = board?.labels;
@@ -175,7 +179,7 @@ export default function CardPage({ isTemplate }: { isTemplate?: boolean }) {
   } = useModal();
   const { showPopup } = usePopup();
   const { workspace } = useWorkspace();
-  const { canEditCard } = usePermissions();
+  const { canEditCard, canEditAssignedCard } = usePermissions();
   const { data: session } = authClient.useSession();
   const [activeChecklistForm, setActiveChecklistForm] = useState<string | null>(
     null,
@@ -191,7 +195,11 @@ export default function CardPage({ isTemplate }: { isTemplate?: boolean }) {
   );
 
   const isCreator = card?.createdBy && session?.user.id === card.createdBy;
-  const canEdit = canEditCard || isCreator;
+  const isMember = card?.members.some(
+    (member) => member.user?.id === session?.user.id,
+  );
+  const canEdit =
+    canEditCard || isCreator || (canEditAssignedCard && isMember);
 
   const refetchCard = async () => {
     if (cardId) await utils.card.byId.refetch({ cardPublicId: cardId });
@@ -339,6 +347,7 @@ export default function CardPage({ isTemplate }: { isTemplate?: boolean }) {
                   isTemplate={isTemplate}
                   boardPublicId={boardId}
                   cardCreatedBy={card?.createdBy}
+                  cardMembers={card?.members}
                 />
                 <Link
                   href={`/${isTemplate ? "templates" : "boards"}/${boardId}`}

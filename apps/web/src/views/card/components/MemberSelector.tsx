@@ -34,52 +34,52 @@ export default function MemberSelector({
   const { showPopup } = usePopup();
 
   const addOrRemoveMember = api.card.addOrRemoveMember.useMutation({
-    onMutate: async (update) => {
-      await utils.card.byId.cancel();
-
+    onMutate: async ({ cardPublicId, workspaceMemberPublicId }) => {
+      await utils.card.byId.cancel({ cardPublicId });
       const previousCard = utils.card.byId.getData({ cardPublicId });
 
-      utils.card.byId.setData({ cardPublicId }, (oldCard) => {
-        if (!oldCard) return oldCard;
+      if (previousCard) {
+        utils.card.byId.setData({ cardPublicId }, (old) => {
+          if (!old) return old;
 
-        const hasMember = oldCard.members.some(
-          (member) => member.publicId === update.workspaceMemberPublicId,
-        );
+          const isMember = old.members.some(
+            (m) => m.publicId === workspaceMemberPublicId,
+          );
 
-        const memberToAdd = oldCard.members.find(
-          (member) => member.publicId === update.workspaceMemberPublicId,
-        );
+          let newMembers = [...old.members];
 
-        const updatedMembers = hasMember
-          ? oldCard.members.filter(
-              (member) => member.publicId !== update.workspaceMemberPublicId,
-            )
-          : [
-              ...oldCard.members,
-              {
-                publicId: update.workspaceMemberPublicId,
-                email: memberToAdd?.email ?? "",
-                deletedAt: null,
-                user: {
-                  id: memberToAdd?.user?.id ?? "",
-                  name: memberToAdd?.user?.name ?? "",
-                },
-              },
-            ];
+          if (isMember) {
+            newMembers = newMembers.filter(
+              (m) => m.publicId !== workspaceMemberPublicId,
+            );
+          } else {
+            // Find member in workspace members to add locally
+            const workspaceMember = old.list.board.workspace.members.find(
+              (m) => m.publicId === workspaceMemberPublicId,
+            );
+            if (workspaceMember) {
+              newMembers.push(workspaceMember);
+            }
+          }
 
-        return {
-          ...oldCard,
-          members: updatedMembers,
-        };
-      });
+          return {
+            ...old,
+            members: newMembers,
+          };
+        });
+      }
 
       return { previousCard };
     },
-    onError: (_error, _newList, context) => {
-      utils.card.byId.setData({ cardPublicId }, context?.previousCard);
+    onError: (error, { cardPublicId }, context) => {
+      if (context?.previousCard) {
+        utils.card.byId.setData({ cardPublicId }, context.previousCard);
+      }
       showPopup({
         header: t`Unable to update members`,
-        message: t`Please try again later, or contact customer support.`,
+        message:
+          error.message ||
+          t`Please try again later, or contact customer support.`,
         icon: "error",
       });
     },
@@ -105,10 +105,13 @@ export default function MemberSelector({
         <CheckboxDropdown
           items={members}
           handleSelect={(_, member) => {
-            addOrRemoveMember.mutate({
-              cardPublicId,
-              workspaceMemberPublicId: member.key,
-            });
+            // Defer mutation to avoid race condition with Menu closing when permissions change
+            setTimeout(() => {
+              addOrRemoveMember.mutate({
+                cardPublicId,
+                workspaceMemberPublicId: member.key,
+              });
+            }, 0);
           }}
           handleCreate={disabled ? undefined : handleInviteMember}
           createNewItemLabel={t`Invite member`}

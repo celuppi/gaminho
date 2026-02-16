@@ -5,12 +5,13 @@ import { createNextApiContext } from "@kan/api/trpc";
 import * as cardRepo from "@kan/db/repository/card.repo";
 import * as cardActivityRepo from "@kan/db/repository/cardActivity.repo";
 import * as cardAttachmentRepo from "@kan/db/repository/cardAttachment.repo";
+import * as permissionRepo from "@kan/db/repository/permission.repo";
 import { generateUID } from "@kan/shared/utils";
 
 import { env } from "~/env";
 import { withRateLimit } from "@kan/api/utils/rateLimit";
 import { createS3Client } from "@kan/shared/utils";
-import { assertPermission } from "@kan/api/utils/permissions";
+import { assertCanEdit } from "@kan/api/utils/permissions";
 
 const MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
 
@@ -81,7 +82,29 @@ export default withRateLimit(
 
       // Check if user has permission to edit the card
       try {
-        await assertPermission(db, user.id, card.workspaceId, "card:edit");
+        const currentMember = await permissionRepo.getMemberWithRole(
+          db,
+          user.id,
+          card.workspaceId,
+        );
+
+        if (!currentMember) {
+          return res.status(403).json({ error: "User is not a member of the workspace" });
+        }
+
+        const isAssigned = await cardRepo.getCardMemberRelationship(db, {
+          cardId: card.id,
+          memberId: currentMember.id,
+        });
+
+        await assertCanEdit(
+          db,
+          user.id,
+          card.workspaceId,
+          "card:edit",
+          card.createdBy,
+          !!isAssigned,
+        );
       } catch {
         return res.status(403).json({ error: "Permission denied" });
       }

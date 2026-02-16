@@ -60,6 +60,7 @@ export const getByPublicId = (db: dbClient, publicId: string) => {
         columns: {
           id: true,
           publicId: true,
+          createdBy: true,
         },
         with: {
           list: {
