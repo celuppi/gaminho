@@ -6,7 +6,7 @@ services:
       - "${WEB_PORT:-3000}:3000"
     networks:
       - kan-network
-      - dokploy-network
+
     build:
       context: .
       dockerfile: ./apps/web/Dockerfile
@@ -113,6 +113,5 @@ services:
 
 networks:
   kan-network:
-  dokploy-network:
-    external: true
+
 
