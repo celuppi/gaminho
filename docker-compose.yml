@@ -2,10 +2,6 @@ services:
   web:
     image: kan-web-local
     container_name: ${CONTAINER_NAME:-kan-web}
-    ports:
-      - "${WEB_PORT:-3000}:3000"
-    networks:
-      - kan-network
 
     build:
       context: .
@@ -108,10 +104,4 @@ services:
       - APPLE_APP_BUNDLE_IDENTIFIER=${APPLE_APP_BUNDLE_IDENTIFIER}
 
     restart: unless-stopped
-
-
-
-networks:
-  kan-network:
-
 
