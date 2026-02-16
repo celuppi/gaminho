@@ -1,6 +1,6 @@
 services:
   web:
-    image: ghcr.io/celuppi/gaminho:v1
+    image: ghcr.io/celuppi/gaminho:v2
     container_name: ${CONTAINER_NAME:-kan-web}
 
 
