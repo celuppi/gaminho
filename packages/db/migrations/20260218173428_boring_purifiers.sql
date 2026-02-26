@@ -1,4 +1,9 @@
-ALTER TYPE "public"."card_activity_type" ADD VALUE 'card.updated.area';--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TYPE "public"."card_activity_type" ADD VALUE 'card.updated.area';
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "area" (
 	"id" bigserial PRIMARY KEY NOT NULL,
 	"publicId" varchar(12) NOT NULL,
@@ -14,7 +19,12 @@ CREATE TABLE IF NOT EXISTS "area" (
 );
 --> statement-breakpoint
 ALTER TABLE "area" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
-ALTER TABLE "card" ADD COLUMN "areaId" bigint;--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "card" ADD COLUMN "areaId" bigint;
+EXCEPTION
+ WHEN duplicate_column THEN null;
+END $$;
+--> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "area" ADD CONSTRAINT "area_createdBy_user_id_fk" FOREIGN KEY ("createdBy") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;
 EXCEPTION
