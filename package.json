@@ -37,7 +37,9 @@
       "@types/minimatch": "npm:minimatch@*",
       "@types/glob": "npm:@types/glob@^8.1.0",
       "react": "18.3.1",
-      "react-dom": "18.3.1"
+      "react-dom": "18.3.1",
+      "react-reconciler": "0.29.0",
+      "ink": "^4.0.0"
     }
   }
 }

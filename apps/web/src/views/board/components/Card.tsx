@@ -16,11 +16,11 @@ import { getAvatarUrl } from "~/utils/helpers";
 
 const Card = ({
   title,
-  labels,
-  members,
-  checklists,
+  labels = [],
+  members = [],
+  checklists = [],
   description,
-  comments,
+  comments = [],
   attachments,
   dueDate,
   area,
@@ -100,7 +100,7 @@ const Card = ({
                   <HiBars3BottomLeft className="h-4 w-4" />
                 </div>
               )}
-              {hasDueDate && dueDate && (
+              {dueDate && (
                 <div
                   className={twMerge(
                     "flex items-center gap-1",
