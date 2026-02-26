@@ -14,11 +14,10 @@ import {
 } from "react-icons/hi2";
 
 import type { UpdateBoardInput } from "@kan/api/types";
-
 import { authClient } from "@kan/auth/client";
 
-import Button from "~/components/Button";
 import { AreaForm } from "~/components/AreaForm";
+import Button from "~/components/Button";
 import { DeleteAreaConfirmation } from "~/components/DeleteAreaConfirmation";
 import { DeleteLabelConfirmation } from "~/components/DeleteLabelConfirmation";
 import { LabelForm } from "~/components/LabelForm";
@@ -287,15 +286,14 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
       const card = boardData?.lists
         .flatMap((l) => l.cards)
         .find((c) => c.publicId === draggableId);
-      const isCreator =
-        card?.createdBy && session?.user.id === card.createdBy;
+      const isCreator = card?.createdBy && session?.user.id === card.createdBy;
       const isMember = card?.members.some(
         (member) => member.userId === session?.user.id,
       );
       const canEdit =
-        canEditCard ||
-        (canEditOwnCard && isCreator) ||
-        (canEditAssignedCard && isMember);
+        !!canEditCard ||
+        (!!canEditOwnCard && !!isCreator) ||
+        (!!canEditAssignedCard && !!isMember);
 
       if (canEdit) {
         updateCardMutation.mutate({
@@ -452,7 +450,7 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
   return (
     <>
       <PageHead
-        title={`${boardData?.name ?? (isTemplate ? t`Board` : t`Template`)} | ${workspace.name ?? t`Workspace`}`}
+        title={`${boardData?.name ?? (isTemplate ? t`Board` : t`Template`)} | ${workspace.name}`}
       />
       <div className="relative flex h-full flex-col">
         <PatternedBackground />
@@ -682,7 +680,20 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                                             comments={card.comments}
                                             attachments={card.attachments}
                                             dueDate={card.dueDate}
-                                            area={card.area}
+                                            area={
+                                              card.area as {
+                                                name: string;
+                                                colourCode: string | null;
+                                              } | null
+                                            }
+                                            criticality={
+                                              card.criticality as
+                                                | "Urgente"
+                                                | "Importante"
+                                                | "Média"
+                                                | "Baixa"
+                                                | null
+                                            }
                                           />
                                         </Link>
                                       )}

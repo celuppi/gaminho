@@ -45,6 +45,7 @@ export const create = async (
     position: "start" | "end";
     dueDate?: Date | null;
     areaId?: number | null;
+    criticality?: "Urgente" | "Importante" | "Média" | "Baixa";
   },
 ) => {
   return db.transaction(async (tx) => {
@@ -95,8 +96,13 @@ export const create = async (
         index: index,
         dueDate: cardInput.dueDate ?? null,
         areaId: cardInput.areaId,
+        criticality: cardInput.criticality ?? "Média",
       })
-      .returning({ id: cards.id, listId: cards.listId, publicId: cards.publicId });
+      .returning({
+        id: cards.id,
+        listId: cards.listId,
+        publicId: cards.publicId,
+      });
 
     if (!result[0]) throw new Error("Unable to create card");
 
@@ -189,6 +195,7 @@ export const update = async (
     description?: string;
     dueDate?: Date | null;
     areaId?: number | null;
+    criticality?: "Urgente" | "Importante" | "Média" | "Baixa";
   },
   args: {
     cardPublicId: string;
@@ -201,6 +208,8 @@ export const update = async (
       description: cardInput.description,
       dueDate: cardInput.dueDate !== undefined ? cardInput.dueDate : undefined,
       areaId: cardInput.areaId !== undefined ? cardInput.areaId : undefined,
+      criticality:
+        cardInput.criticality !== undefined ? cardInput.criticality : undefined,
       updatedAt: new Date(),
     })
     .where(and(eq(cards.publicId, args.cardPublicId), isNull(cards.deletedAt)))
@@ -210,6 +219,7 @@ export const update = async (
       title: cards.title,
       description: cards.description,
       dueDate: cards.dueDate,
+      criticality: cards.criticality,
     });
 
   return result;
@@ -245,6 +255,7 @@ export const getByPublicId = (db: dbClient, cardPublicId: string) => {
       description: true,
       listId: true,
       dueDate: true,
+      criticality: true,
     },
     where: eq(cards.publicId, cardPublicId),
   });
@@ -430,6 +441,7 @@ export const getWithListAndMembersByPublicId = async (
       title: true,
       description: true,
       dueDate: true,
+      criticality: true,
       createdBy: true,
     },
     with: {
@@ -505,12 +517,12 @@ export const getWithListAndMembersByPublicId = async (
                 where: isNull(labels.deletedAt),
               },
               areas: {
-                 columns: {
-                    publicId: true,
-                    name: true,
-                    colourCode: true,
-                 },
-                 where: isNull(areas.deletedAt),
+                columns: {
+                  publicId: true,
+                  name: true,
+                  colourCode: true,
+                },
+                where: isNull(areas.deletedAt),
               },
               lists: {
                 columns: {
@@ -832,6 +844,7 @@ export const reorder = async (
         title: true,
         description: true,
         dueDate: true,
+        criticality: true,
       },
       where: eq(cards.id, card.id),
     });

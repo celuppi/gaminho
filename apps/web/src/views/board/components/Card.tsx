@@ -24,6 +24,7 @@ const Card = ({
   attachments,
   dueDate,
   area,
+  criticality,
 }: {
   title: string;
   labels: { name: string; colourCode: string | null }[];
@@ -47,6 +48,7 @@ const Card = ({
   attachments?: { publicId: string }[];
   dueDate?: Date | null;
   area?: { name: string; colourCode: string | null } | null;
+  criticality?: "Urgente" | "Importante" | "Média" | "Baixa" | null;
 }) => {
   const { dateLocale } = useLocalisation();
   const showYear = dueDate ? !isSameYear(dueDate, new Date()) : false;
@@ -77,9 +79,28 @@ const Card = ({
       hasDescription ||
       comments.length > 0 ||
       hasDueDate ||
-      hasAttachments ? (
+      hasAttachments ||
+      criticality ? (
         <div className="mt-2 flex flex-col justify-end">
           <div className="space-x-0.5">
+            {criticality && (
+              <Badge
+                value={criticality}
+                iconLeft={
+                  <div
+                    className={`h-2 w-2 rounded-full ${
+                      criticality === "Urgente"
+                        ? "bg-red-600"
+                        : criticality === "Importante"
+                          ? "bg-red-400"
+                          : criticality === "Média"
+                            ? "bg-green-500"
+                            : "bg-blue-500"
+                    }`}
+                  />
+                }
+              />
+            )}
             {area && (
               <Badge
                 value={area.name}

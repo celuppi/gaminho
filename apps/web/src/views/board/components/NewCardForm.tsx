@@ -30,6 +30,7 @@ import { formatMemberDisplayName, getAvatarUrl } from "~/utils/helpers";
 type NewCardFormInput = NewCardInput & {
   isCreateAnotherEnabled: boolean;
   dueDate?: Date | null;
+  criticality: "Urgente" | "Importante" | "Média" | "Baixa";
 };
 
 interface QueryParams {
@@ -69,6 +70,7 @@ export function NewCardForm({
       isCreateAnotherEnabled: false,
       position: "start",
       dueDate: null,
+      criticality: "Média",
     },
     resetOnClose: true,
   });
@@ -85,6 +87,7 @@ export function NewCardForm({
   const title = watch("title");
   const description = watch("description");
   const dueDate = watch("dueDate");
+  const criticality = watch("criticality");
   const [isDateSelectorOpen, setIsDateSelectorOpen] = useState(false);
 
   // saving form state whenever form values change
@@ -144,6 +147,7 @@ export function NewCardForm({
               listId: 2,
               description: "",
               dueDate: args.dueDate ?? null,
+              criticality: args.criticality ?? "Média",
               labels: oldBoard.labels.filter((label) =>
                 args.labelPublicIds.includes(label.publicId),
               ),
@@ -201,6 +205,7 @@ export function NewCardForm({
           isCreateAnotherEnabled,
           position,
           dueDate: null,
+          criticality: "Média" as const,
         };
         reset(newFormState);
         saveFormState(newFormState);
@@ -259,6 +264,7 @@ export function NewCardForm({
       memberPublicIds: data.memberPublicIds,
       position: data.position,
       dueDate: data.dueDate ?? null,
+      criticality: data.criticality,
     });
   };
 
@@ -495,6 +501,41 @@ export function NewCardForm({
                 </div>
               </>
             )}
+          </div>
+          <div className="w-fit">
+            <CheckboxDropdown
+              items={[
+                {
+                  key: "Urgente",
+                  value: "Urgente",
+                  selected: criticality === "Urgente",
+                },
+                {
+                  key: "Importante",
+                  value: "Importante",
+                  selected: criticality === "Importante",
+                },
+                {
+                  key: "Média",
+                  value: "Média",
+                  selected: criticality === "Média",
+                },
+                {
+                  key: "Baixa",
+                  value: "Baixa",
+                  selected: criticality === "Baixa",
+                },
+              ]}
+              handleSelect={(_groupKey, item) =>
+                setValue("criticality", item.key as any)
+              }
+            >
+              <div className="flex h-full w-full items-center gap-1 rounded-[5px] border-[1px] border-light-600 bg-light-200 px-2 py-1 text-left text-xs text-light-800 hover:bg-light-300 dark:border-dark-600 dark:bg-dark-400 dark:text-dark-1000 dark:hover:bg-dark-500">
+                <span className="font-semibold text-light-900 dark:text-dark-900">
+                  {criticality}
+                </span>
+              </div>
+            </CheckboxDropdown>
           </div>
           <button
             onClick={(e) => {

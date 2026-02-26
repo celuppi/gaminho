@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { t } from "@lingui/core/macro";
+
 import { PageHead } from "~/components/PageHead";
 import PatternedBackground from "~/components/PatternedBackground";
 import { api } from "~/utils/api";
@@ -25,7 +26,12 @@ export default function PublicBoardsView() {
     workspaceSlug,
   }: {
     isLoading: boolean;
-    boards: { publicId: string; name: string; slug: string }[];
+    boards: {
+      publicId: string;
+      name: string;
+      slug: string;
+      lists?: { cards?: { criticality: string | null }[] }[];
+    }[];
     workspaceSlug: string;
   }) => {
     if (isLoading)
@@ -48,11 +54,49 @@ export default function PublicBoardsView() {
             href={`/${workspaceSlug}/${board.slug}`}
             className="h-full"
           >
-            <div className="relative flex h-full w-full items-center justify-center rounded-md border border-dashed border-light-400 bg-light-50 shadow-sm hover:bg-light-200 dark:border-dark-600 dark:bg-dark-50 dark:hover:bg-dark-100">
+            <div className="relative flex h-full w-full flex-col items-center justify-center rounded-md border border-dashed border-light-400 bg-light-50 shadow-sm hover:bg-light-200 dark:border-dark-600 dark:bg-dark-50 dark:hover:bg-dark-100">
               <PatternedBackground />
               <p className="text-md px-4 font-medium text-neutral-900 dark:text-dark-1000">
                 {board.name}
               </p>
+              <div className="z-10 mt-1 flex gap-1">
+                {(["Urgente", "Importante", "Média", "Baixa"] as const).map(
+                  (crit) => {
+                    const count = board.lists?.reduce((acc, list) => {
+                      return (
+                        acc +
+                        (list.cards?.filter((c) => c.criticality === crit)
+                          .length ?? 0)
+                      );
+                    }, 0);
+
+                    if (!count) return null;
+
+                    return (
+                      <div
+                        key={crit}
+                        className="flex items-center gap-1"
+                        title={`${count} ${crit}`}
+                      >
+                        <div
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            crit === "Urgente"
+                              ? "bg-red-600"
+                              : crit === "Importante"
+                                ? "bg-red-400"
+                                : crit === "Média"
+                                  ? "bg-green-500"
+                                  : "bg-blue-500"
+                          }`}
+                        />
+                        <span className="text-[9px] font-medium text-neutral-500 dark:text-dark-800">
+                          {count}
+                        </span>
+                      </div>
+                    );
+                  },
+                )}
+              </div>
             </div>
           </Link>
         ))}

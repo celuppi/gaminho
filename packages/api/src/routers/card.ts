@@ -9,12 +9,16 @@ import * as labelRepo from "@kan/db/repository/label.repo";
 import * as listRepo from "@kan/db/repository/list.repo";
 import * as permissionRepo from "@kan/db/repository/permission.repo";
 import * as workspaceRepo from "@kan/db/repository/workspace.repo";
+import { generateAttachmentUrl, generateAvatarUrl } from "@kan/shared/utils";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { mergeActivities } from "../utils/activities";
 import { sendMentionEmails } from "../utils/notifications";
-import { assertCanDelete, assertCanEdit, assertPermission } from "../utils/permissions";
-import { generateAttachmentUrl, generateAvatarUrl } from "@kan/shared/utils";
+import {
+  assertCanDelete,
+  assertCanEdit,
+  assertPermission,
+} from "../utils/permissions";
 
 export const cardRouter = createTRPCRouter({
   create: protectedProcedure
@@ -38,6 +42,9 @@ export const cardRouter = createTRPCRouter({
         position: z.enum(["start", "end"]),
         dueDate: z.date().nullable().optional(),
         areaPublicId: z.string().min(12).optional(),
+        criticality: z
+          .enum(["Urgente", "Importante", "Média", "Baixa"])
+          .optional(),
       }),
     )
     .output(z.custom<Awaited<ReturnType<typeof cardRepo.create>>>())
@@ -85,6 +92,7 @@ export const cardRouter = createTRPCRouter({
         position: input.position,
         dueDate: input.dueDate ?? null,
         areaId,
+        criticality: input.criticality,
       });
 
       const newCardId = newCard.id;
@@ -223,7 +231,12 @@ export const cardRouter = createTRPCRouter({
           code: "NOT_FOUND",
         });
 
-      await assertPermission(ctx.db, userId, card.workspaceId, "comment:create");
+      await assertPermission(
+        ctx.db,
+        userId,
+        card.workspaceId,
+        "comment:create",
+      );
 
       const newComment = await cardCommentRepo.create(ctx.db, {
         comment: input.comment,
@@ -767,9 +780,7 @@ export const cardRouter = createTRPCRouter({
       return {
         ...result,
         attachments: attachmentsWithUrls,
-        members: result.members.filter(
-          (member) => member.deletedAt === null,
-        ),
+        members: result.members.filter((member) => member.deletedAt === null),
         list: {
           ...result.list,
           board: {
@@ -901,11 +912,14 @@ export const cardRouter = createTRPCRouter({
       z.object({
         cardPublicId: z.string().min(12),
         title: z.string().min(1).max(2000).optional(),
-        description: z.string().optional(),
+        description: z.string().max(10000).optional(),
         index: z.number().optional(),
         listPublicId: z.string().min(12).optional(),
         dueDate: z.date().nullable().optional(),
         areaPublicId: z.string().min(12).nullable().optional(),
+        criticality: z
+          .enum(["Urgente", "Importante", "Média", "Baixa"])
+          .optional(),
       }),
     )
     .output(z.custom<Awaited<ReturnType<typeof cardRepo.update>>>())
@@ -1012,6 +1026,7 @@ export const cardRouter = createTRPCRouter({
             description: string | null;
             publicId: string;
             dueDate: Date | null;
+            criticality: "Urgente" | "Importante" | "Média" | "Baixa";
           }
         | undefined;
 
@@ -1025,7 +1040,8 @@ export const cardRouter = createTRPCRouter({
         input.title ||
         input.description ||
         input.dueDate !== undefined ||
-        input.areaPublicId !== undefined
+        input.areaPublicId !== undefined ||
+        input.criticality !== undefined
       ) {
         result = await cardRepo.update(
           ctx.db,
@@ -1034,6 +1050,9 @@ export const cardRouter = createTRPCRouter({
             ...(input.description && { description: input.description }),
             ...(input.dueDate !== undefined && { dueDate: input.dueDate }),
             ...(input.areaPublicId !== undefined && { areaId: newAreaId }),
+            ...(input.criticality !== undefined && {
+              criticality: input.criticality,
+            }),
           },
           { cardPublicId: input.cardPublicId },
         );
@@ -1057,7 +1076,7 @@ export const cardRouter = createTRPCRouter({
 
       // Area activity logging
       if (input.areaPublicId !== undefined) {
-         activities.push({
+        activities.push({
           type: "card.updated.area" as const,
           cardId: result.id,
           createdBy: userId,
@@ -1132,6 +1151,19 @@ export const cardRouter = createTRPCRouter({
 
       if (activities.length > 0) {
         await cardActivityRepo.bulkCreate(ctx.db, activities);
+      }
+
+      if (
+        input.criticality !== undefined &&
+        input.criticality !== existingCard.criticality
+      ) {
+        await cardActivityRepo.create(ctx.db, {
+          type: "card.updated.criticality" as const,
+          cardId: existingCard.id,
+          toTitle: input.criticality,
+          fromTitle: existingCard.criticality,
+          createdBy: userId,
+        });
       }
 
       return result;

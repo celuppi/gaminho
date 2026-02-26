@@ -135,8 +135,32 @@ export function CardModal({
                 </>
               )}
             </div>
-            {labels.length > 0 && (
-              <div className="mt-2">
+            {(labels.length > 0 || data?.criticality) && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {data?.criticality && (
+                  <Badge
+                    value={
+                      data.criticality as
+                        | "Urgente"
+                        | "Importante"
+                        | "Média"
+                        | "Baixa"
+                    }
+                    iconLeft={
+                      <div
+                        className={`h-2 w-2 rounded-full ${
+                          data.criticality === "Urgente"
+                            ? "bg-red-600"
+                            : data.criticality === "Importante"
+                              ? "bg-red-400"
+                              : data.criticality === "Média"
+                                ? "bg-green-500"
+                                : "bg-blue-500"
+                        }`}
+                      />
+                    }
+                  />
+                )}
                 {labels.map((label) => (
                   <Badge
                     key={label.publicId}
@@ -159,9 +183,7 @@ export function CardModal({
                     <Editor
                       content={data.description}
                       readOnly
-                      workspaceMembers={
-                        data?.list.board.workspace.members ?? []
-                      }
+                      workspaceMembers={data.list.board.workspace.members}
                     />
                   </div>
                 </div>

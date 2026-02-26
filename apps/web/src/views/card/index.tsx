@@ -3,15 +3,15 @@ import { useRouter } from "next/router";
 import { t } from "@lingui/core/macro";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { IoChevronForwardSharp } from "react-icons/io5";
 import { HiXMark } from "react-icons/hi2";
+import { IoChevronForwardSharp } from "react-icons/io5";
 
 import { authClient } from "@kan/auth/client";
 
+import { AreaForm } from "~/components/AreaForm";
 import Avatar from "~/components/Avatar";
 import Editor from "~/components/Editor";
 import FeedbackModal from "~/components/FeedbackModal";
-import { AreaForm } from "~/components/AreaForm";
 import { LabelForm } from "~/components/LabelForm";
 import LabelIcon from "~/components/LabelIcon";
 import Modal from "~/components/modal";
@@ -25,19 +25,20 @@ import { useWorkspace } from "~/providers/workspace";
 import { api } from "~/utils/api";
 import { invalidateCard } from "~/utils/cardInvalidation";
 import { formatMemberDisplayName, getAvatarUrl } from "~/utils/helpers";
-import { DeleteLabelConfirmation } from "../../components/DeleteLabelConfirmation";
 import { DeleteAreaConfirmation } from "../../components/DeleteAreaConfirmation";
+import { DeleteLabelConfirmation } from "../../components/DeleteLabelConfirmation";
 import ActivityList from "./components/ActivityList";
+import AreaSelector from "./components/AreaSelector";
 import { AttachmentThumbnails } from "./components/AttachmentThumbnails";
 import { AttachmentUpload } from "./components/AttachmentUpload";
 import Checklists from "./components/Checklists";
+import { CriticalitySelector } from "./components/CriticalitySelector";
 import { DeleteCardConfirmation } from "./components/DeleteCardConfirmation";
 import { DeleteChecklistConfirmation } from "./components/DeleteChecklistConfirmation";
 import { DeleteCommentConfirmation } from "./components/DeleteCommentConfirmation";
 import Dropdown from "./components/Dropdown";
 import { DueDateSelector } from "./components/DueDateSelector";
 import LabelSelector from "./components/LabelSelector";
-import AreaSelector from "./components/AreaSelector";
 import ListSelector from "./components/ListSelector";
 import MemberSelector from "./components/MemberSelector";
 import { NewChecklistForm } from "./components/NewChecklistForm";
@@ -66,8 +67,7 @@ export function CardRightPanel({ isTemplate }: { isTemplate?: boolean }) {
   const isMember = card?.members.some(
     (member) => member.user?.id === session?.user.id,
   );
-  const canEdit =
-    canEditCard || isCreator || (canEditAssignedCard && isMember);
+  const canEdit = canEditCard || isCreator || (canEditAssignedCard && isMember);
 
   const board = card?.list.board;
   const labels = board?.labels;
@@ -187,6 +187,15 @@ export function CardRightPanel({ isTemplate }: { isTemplate?: boolean }) {
           disabled={!canEdit}
         />
       </div>
+      <div className="mb-4 flex w-full flex-row">
+        <p className="my-2 mb-2 w-[100px] text-sm font-medium">{t`Criticidade`}</p>
+        <CriticalitySelector
+          cardPublicId={cardId ?? ""}
+          criticality={card?.criticality}
+          isLoading={!card}
+          disabled={!canEdit}
+        />
+      </div>
     </div>
   );
 }
@@ -223,8 +232,7 @@ export default function CardPage({ isTemplate }: { isTemplate?: boolean }) {
   const isMember = card?.members.some(
     (member) => member.user?.id === session?.user.id,
   );
-  const canEdit =
-    canEditCard || isCreator || (canEditAssignedCard && isMember);
+  const canEdit = canEditCard || isCreator || (canEditAssignedCard && isMember);
 
   const refetchCard = async () => {
     if (cardId) await utils.card.byId.refetch({ cardPublicId: cardId });
@@ -346,7 +354,6 @@ export default function CardPage({ isTemplate }: { isTemplate?: boolean }) {
   }, [card]);
 
   if (!cardId) return <></>;
-
 
   return (
     <>

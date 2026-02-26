@@ -65,6 +65,14 @@ export const getAllByWorkspaceId = async (
           name: true,
           index: true,
         },
+        with: {
+          cards: {
+            columns: {
+              criticality: true,
+            },
+            where: isNull(cards.deletedAt),
+          },
+        },
         orderBy: [asc(lists.index)],
       },
       labels: {
@@ -277,6 +285,7 @@ export const getByPublicId = async (
               listId: true,
               index: true,
               dueDate: true,
+              criticality: true,
               createdBy: true,
             },
             with: {
@@ -425,7 +434,7 @@ export const getBySlug = async (
 ) => {
   let cardIds: string[] = [];
 
-  if (filters.labels.length || (filters.areas?.length)) {
+  if (filters.labels.length || filters.areas?.length) {
     const filteredCards = await db
       .select({
         publicId: cards.publicId,
@@ -498,6 +507,7 @@ export const getBySlug = async (
               listId: true,
               index: true,
               dueDate: true,
+              criticality: true,
             },
             with: {
               labels: {
@@ -808,7 +818,7 @@ export const createFromSnapshot = async (
           description: string | null;
           index: number;
           area?: {
-             publicId: string;
+            publicId: string;
           } | null;
           labels: {
             publicId: string;
@@ -1076,8 +1086,8 @@ export const removeUserFavorite = async (
     .where(
       and(
         eq(userBoardFavorites.userId, userId),
-        eq(userBoardFavorites.boardId, boardId)
-      )
+        eq(userBoardFavorites.boardId, boardId),
+      ),
     )
     .returning();
 };

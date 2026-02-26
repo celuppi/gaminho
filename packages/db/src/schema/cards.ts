@@ -49,12 +49,19 @@ export const activityTypes = [
   "card.updated.dueDate.updated",
   "card.updated.dueDate.removed",
   "card.archived",
-  "card.updated.area", // Add new activity type
+  "card.updated.area",
+  "card.updated.criticality",
 ] as const;
 
 export type ActivityType = (typeof activityTypes)[number];
 
 export const activityTypeEnum = pgEnum("card_activity_type", activityTypes);
+export const criticalityEnum = pgEnum("card_criticality", [
+  "Urgente",
+  "Importante",
+  "Média",
+  "Baixa",
+]);
 
 export const cards = pgTable("card", {
   id: bigserial("id", { mode: "number" }).primaryKey(),
@@ -79,6 +86,7 @@ export const cards = pgTable("card", {
   areaId: bigint("areaId", { mode: "number" }).references(() => areas.id, {
     onDelete: "set null",
   }),
+  criticality: criticalityEnum("criticality").default("Média").notNull(),
 }).enableRLS();
 
 export const cardsRelations = relations(cards, ({ one, many }) => ({
