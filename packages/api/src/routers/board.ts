@@ -87,6 +87,7 @@ export const boardRouter = createTRPCRouter({
         members: z.array(z.string().min(12)).optional(),
         labels: z.array(z.string().min(12)).optional(),
         lists: z.array(z.string().min(12)).optional(),
+        areas: z.array(z.string().min(12)).optional(),
         dueDateFilters: z
           .array(
             z.enum([
@@ -138,6 +139,7 @@ export const boardRouter = createTRPCRouter({
           members: input.members ?? [],
           labels: input.labels ?? [],
           lists: input.lists ?? [],
+          areas: input.areas ?? [],
           dueDate: dueDateFilters,
           type: input.type,
         },
@@ -151,27 +153,25 @@ export const boardRouter = createTRPCRouter({
       }
 
       // Generate presigned URLs for workspace member avatars
-      const workspaceWithAvatarUrls = result.workspace
-        ? {
-            ...result.workspace,
-            members: await Promise.all(
-              result.workspace.members.map(async (member) => {
-                if (!member.user?.image) {
-                  return member;
-                }
+      const workspaceWithAvatarUrls = {
+        ...result.workspace,
+        members: await Promise.all(
+          result.workspace.members.map(async (member) => {
+            if (!member.user?.image) {
+              return member;
+            }
 
-                const avatarUrl = await generateAvatarUrl(member.user.image);
-                return {
-                  ...member,
-                  user: {
-                    ...member.user,
-                    image: avatarUrl,
-                  },
-                };
-              }),
-            ),
-          }
-        : result.workspace;
+            const avatarUrl = await generateAvatarUrl(member.user.image);
+            return {
+              ...member,
+              user: {
+                ...member.user,
+                image: avatarUrl,
+              },
+            };
+          }),
+        ),
+      };
 
       return {
         ...result,
@@ -205,6 +205,7 @@ export const boardRouter = createTRPCRouter({
         members: z.array(z.string().min(12)).optional(),
         labels: z.array(z.string().min(12)).optional(),
         lists: z.array(z.string().min(12)).optional(),
+        areas: z.array(z.string().min(12)).optional(),
         dueDateFilters: z
           .array(
             z.enum([
@@ -245,6 +246,7 @@ export const boardRouter = createTRPCRouter({
           members: input.members ?? [],
           labels: input.labels ?? [],
           lists: input.lists ?? [],
+          areas: input.areas ?? [],
           dueDate: dueDateFilters,
         },
       );
@@ -480,7 +482,7 @@ export const boardRouter = createTRPCRouter({
       }
 
       // Handle other updates (name, slug, visibility)
-      const hasOtherUpdates = input.name || input.slug || input.visibility !== undefined;
+      const hasOtherUpdates = !!input.name || !!input.slug || input.visibility !== undefined;
 
       if (!hasOtherUpdates) {
         // Only favorite was updated, return success

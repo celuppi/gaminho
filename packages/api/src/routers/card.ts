@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import * as areaRepo from "@kan/db/repository/area.repo";
 import * as cardRepo from "@kan/db/repository/card.repo";
 import * as cardActivityRepo from "@kan/db/repository/cardActivity.repo";
 import * as cardCommentRepo from "@kan/db/repository/cardComment.repo";
@@ -36,6 +37,7 @@ export const cardRouter = createTRPCRouter({
         memberPublicIds: z.array(z.string().min(12)),
         position: z.enum(["start", "end"]),
         dueDate: z.date().nullable().optional(),
+        areaPublicId: z.string().min(12).optional(),
       }),
     )
     .output(z.custom<Awaited<ReturnType<typeof cardRepo.create>>>())
@@ -61,6 +63,20 @@ export const cardRouter = createTRPCRouter({
 
       await assertPermission(ctx.db, userId, list.workspaceId, "card:create");
 
+      let areaId: number | undefined;
+
+      if (input.areaPublicId) {
+        const area = await areaRepo.getByPublicId(ctx.db, input.areaPublicId);
+
+        if (!area)
+          throw new TRPCError({
+            message: `Area with public ID ${input.areaPublicId} not found`,
+            code: "NOT_FOUND",
+          });
+
+        areaId = area.id;
+      }
+
       const newCard = await cardRepo.create(ctx.db, {
         title: input.title,
         description: input.description,
@@ -68,6 +84,7 @@ export const cardRouter = createTRPCRouter({
         listId: list.id,
         position: input.position,
         dueDate: input.dueDate ?? null,
+        areaId,
       });
 
       const newCardId = newCard.id;
@@ -888,6 +905,7 @@ export const cardRouter = createTRPCRouter({
         index: z.number().optional(),
         listPublicId: z.string().min(12).optional(),
         dueDate: z.date().nullable().optional(),
+        areaPublicId: z.string().min(12).nullable().optional(),
       }),
     )
     .output(z.custom<Awaited<ReturnType<typeof cardRepo.update>>>())
@@ -959,6 +977,27 @@ export const cardRouter = createTRPCRouter({
         newListId = newList.id;
       }
 
+      let newAreaId: number | undefined | null;
+
+      if (input.areaPublicId !== undefined) {
+        if (input.areaPublicId === null) {
+          newAreaId = null;
+        } else {
+          const newArea = await areaRepo.getByPublicId(
+            ctx.db,
+            input.areaPublicId,
+          );
+
+          if (!newArea)
+            throw new TRPCError({
+              message: `Area with public ID ${input.areaPublicId} not found`,
+              code: "NOT_FOUND",
+            });
+
+          newAreaId = newArea.id;
+        }
+      }
+
       if (!existingCard) {
         throw new TRPCError({
           message: `Card with public ID ${input.cardPublicId} not found`,
@@ -977,14 +1016,24 @@ export const cardRouter = createTRPCRouter({
         | undefined;
 
       const previousDueDate = existingCard.dueDate;
+      // TODO: get previous area from existingCard if available in repo function.
+      // currently existingCard (getByPublicId) DOES NOT return areaId.
+      // We need to fetch it if we want to log activity fromArea -> toArea.
+      // For now, let's just update the card.
 
-      if (input.title || input.description || input.dueDate !== undefined) {
+      if (
+        input.title ||
+        input.description ||
+        input.dueDate !== undefined ||
+        input.areaPublicId !== undefined
+      ) {
         result = await cardRepo.update(
           ctx.db,
           {
             ...(input.title && { title: input.title }),
             ...(input.description && { description: input.description }),
             ...(input.dueDate !== undefined && { dueDate: input.dueDate }),
+            ...(input.areaPublicId !== undefined && { areaId: newAreaId }),
           },
           { cardPublicId: input.cardPublicId },
         );
@@ -1005,6 +1054,16 @@ export const cardRouter = createTRPCRouter({
         });
 
       const activities = [];
+
+      // Area activity logging
+      if (input.areaPublicId !== undefined) {
+         activities.push({
+          type: "card.updated.area" as const,
+          cardId: result.id,
+          createdBy: userId,
+          // We can add from/to details if we fetch them, but for now simple log
+        });
+      }
 
       if (input.title && existingCard.title !== input.title) {
         activities.push({

@@ -15,6 +15,7 @@ import {
 import type { dbClient } from "@kan/db/client";
 import type { BoardVisibilityStatus } from "@kan/db/schema";
 import {
+  areas,
   boards,
   cardActivities,
   cardAttachments,
@@ -73,7 +74,14 @@ export const getAllByWorkspaceId = async (
           colourCode: true,
         },
       },
-    },
+      areas: {
+        columns: {
+          publicId: true,
+          name: true,
+          colourCode: true,
+        },
+      },
+    }, // End of with block
     where: and(
       eq(boards.workspaceId, workspaceId),
       isNull(boards.deletedAt),
@@ -150,13 +158,18 @@ export const getByPublicId = async (
     members: string[];
     labels: string[];
     lists: string[];
+    areas?: string[];
     dueDate: DueDateFilter[];
     type: "regular" | "template" | undefined;
   },
 ) => {
   let cardIds: string[] = [];
 
-  if (filters.labels.length > 0 || filters.members.length > 0) {
+  if (
+    filters.labels.length > 0 ||
+    filters.members.length > 0 ||
+    (filters.areas && filters.areas.length > 0)
+  ) {
     const filteredCards = await db
       .select({
         publicId: cards.publicId,
@@ -172,6 +185,7 @@ export const getByPublicId = async (
         workspaceMembers,
         eq(cardToWorkspaceMembers.workspaceMemberId, workspaceMembers.id),
       )
+      .leftJoin(areas, eq(cards.areaId, areas.id))
       .where(
         and(
           isNull(cards.deletedAt),
@@ -181,6 +195,9 @@ export const getByPublicId = async (
               : undefined,
             filters.members.length > 0
               ? inArray(workspaceMembers.publicId, filters.members)
+              : undefined,
+            filters.areas && filters.areas.length > 0
+              ? inArray(areas.publicId, filters.areas)
               : undefined,
           ),
         ),
@@ -211,6 +228,7 @@ export const getByPublicId = async (
           members: {
             columns: {
               publicId: true,
+              userId: true,
               email: true,
               status: true,
             },
@@ -235,6 +253,14 @@ export const getByPublicId = async (
         },
         where: isNull(labels.deletedAt),
       },
+      areas: {
+        columns: {
+          publicId: true,
+          name: true,
+          colourCode: true,
+        },
+        where: isNull(areas.deletedAt),
+      },
       lists: {
         columns: {
           publicId: true,
@@ -251,6 +277,7 @@ export const getByPublicId = async (
               listId: true,
               index: true,
               dueDate: true,
+              createdBy: true,
             },
             with: {
               labels: {
@@ -264,11 +291,19 @@ export const getByPublicId = async (
                   },
                 },
               },
+              area: {
+                columns: {
+                  publicId: true,
+                  name: true,
+                  colourCode: true,
+                },
+              },
               members: {
                 with: {
                   member: {
                     columns: {
                       publicId: true,
+                      userId: true,
                       email: true,
                       deletedAt: true,
                     },
@@ -364,7 +399,10 @@ export const getByPublicId = async (
         ...card,
         labels: card.labels.map((label) => label.label),
         members: card.members
-          .map((member) => member.member)
+          .map((member) => ({
+            ...member.member,
+            userId: member.member.userId,
+          }))
           .filter((member) => member.deletedAt === null),
       })),
     })),
@@ -381,12 +419,13 @@ export const getBySlug = async (
     members: string[];
     labels: string[];
     lists: string[];
+    areas?: string[];
     dueDate: DueDateFilter[];
   },
 ) => {
   let cardIds: string[] = [];
 
-  if (filters.labels.length) {
+  if (filters.labels.length || (filters.areas?.length)) {
     const filteredCards = await db
       .select({
         publicId: cards.publicId,
@@ -394,12 +433,18 @@ export const getBySlug = async (
       .from(cards)
       .leftJoin(cardsToLabels, eq(cards.id, cardsToLabels.cardId))
       .leftJoin(labels, eq(cardsToLabels.labelId, labels.id))
+      .leftJoin(areas, eq(cards.areaId, areas.id))
       .where(
         and(
           isNull(cards.deletedAt),
-          filters.labels.length > 0
-            ? inArray(labels.publicId, filters.labels)
-            : undefined,
+          or(
+            filters.labels.length > 0
+              ? inArray(labels.publicId, filters.labels)
+              : undefined,
+            filters.areas && filters.areas.length > 0
+              ? inArray(areas.publicId, filters.areas)
+              : undefined,
+          ),
         ),
       );
 
@@ -429,6 +474,14 @@ export const getBySlug = async (
         },
         where: isNull(labels.deletedAt),
       },
+      areas: {
+        columns: {
+          publicId: true,
+          name: true,
+          colourCode: true,
+        },
+        where: isNull(areas.deletedAt),
+      },
       lists: {
         columns: {
           publicId: true,
@@ -456,6 +509,13 @@ export const getBySlug = async (
                       colourCode: true,
                     },
                   },
+                },
+              },
+              area: {
+                columns: {
+                  publicId: true,
+                  name: true,
+                  colourCode: true,
                 },
               },
               attachments: {
@@ -738,6 +798,7 @@ export const createFromSnapshot = async (
   args: {
     source: {
       name: string;
+      areas: { publicId: string; name: string; colourCode: string | null }[];
       labels: { publicId: string; name: string; colourCode: string | null }[];
       lists: {
         name: string;
@@ -746,6 +807,9 @@ export const createFromSnapshot = async (
           title: string;
           description: string | null;
           index: number;
+          area?: {
+             publicId: string;
+          } | null;
           labels: {
             publicId: string;
             name: string;
@@ -792,6 +856,32 @@ export const createFromSnapshot = async (
       });
 
     if (!newBoard) throw new Error("Failed to create board");
+
+    // Areas
+    const srcAreas = args.source.areas;
+    const areaMap = new Map<string, number>();
+
+    if (srcAreas.length) {
+      const inserted = await tx
+        .insert(areas)
+        .values(
+          srcAreas.map((a) => ({
+            publicId: generateUID(),
+            name: a.name,
+            colourCode: a.colourCode ?? null,
+            createdBy: args.createdBy,
+            boardId: newBoard.id,
+          })),
+        )
+        .returning({ id: areas.id });
+
+      for (let i = 0; i < srcAreas.length; i++) {
+        const src = srcAreas[i];
+        if (!src) throw new Error("Source area not found");
+        const created = inserted[i];
+        if (created) areaMap.set(src.publicId, created.id);
+      }
+    }
 
     // Labels
     const srcLabels = args.source.labels;
@@ -857,6 +947,9 @@ export const createFromSnapshot = async (
             createdBy: args.createdBy,
             listId: newListId,
             index: card.index,
+            areaId: card.area?.publicId
+              ? areaMap.get(card.area.publicId)
+              : null,
           })
           .returning({ id: cards.id });
 

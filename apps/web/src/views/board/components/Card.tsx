@@ -23,6 +23,7 @@ const Card = ({
   comments,
   attachments,
   dueDate,
+  area,
 }: {
   title: string;
   labels: { name: string; colourCode: string | null }[];
@@ -45,6 +46,7 @@ const Card = ({
   comments: { publicId: string }[];
   attachments?: { publicId: string }[];
   dueDate?: Date | null;
+  area?: { name: string; colourCode: string | null } | null;
 }) => {
   const { dateLocale } = useLocalisation();
   const showYear = dueDate ? !isSameYear(dueDate, new Date()) : false;
@@ -68,7 +70,8 @@ const Card = ({
   return (
     <div className="flex flex-col overflow-hidden rounded-md border border-light-200 bg-light-50 px-3 py-2 text-sm text-neutral-900 dark:border-dark-200 dark:bg-dark-200 dark:text-dark-1000 dark:hover:bg-dark-300">
       <span className="break-words">{title}</span>
-      {labels.length ||
+      {area ||
+      labels.length ||
       members.length ||
       checklists.length > 0 ||
       hasDescription ||
@@ -77,6 +80,12 @@ const Card = ({
       hasAttachments ? (
         <div className="mt-2 flex flex-col justify-end">
           <div className="space-x-0.5">
+            {area && (
+              <Badge
+                value={area.name}
+                iconLeft={<LabelIcon colourCode={area.colourCode} />}
+              />
+            )}
             {labels.map((label) => (
               <Badge
                 value={label.name}

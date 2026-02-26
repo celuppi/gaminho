@@ -1,8 +1,7 @@
 services:
   web:
-    image: ghcr.io/celuppi/gaminho:v2
+    image: ghcr.io/celuppi/gaminho:latest
     container_name: ${CONTAINER_NAME:-kan-web}
-
 
     env_file:
       - .env
@@ -102,4 +101,3 @@ services:
       - APPLE_APP_BUNDLE_IDENTIFIER=${APPLE_APP_BUNDLE_IDENTIFIER}
 
     restart: unless-stopped
-    

@@ -183,6 +183,13 @@
       "when": 1770500457005,
       "tag": "20260207214056_AddNotificationsTable",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1771436068218,
+      "tag": "20260218173428_boring_purifiers",
+      "breakpoints": true
     }
   ]
 }

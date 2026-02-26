@@ -12,6 +12,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
+import { areas } from "./areas";
 import { boards } from "./boards";
 import { checklists } from "./checklists";
 import { imports } from "./imports";
@@ -48,6 +49,7 @@ export const activityTypes = [
   "card.updated.dueDate.updated",
   "card.updated.dueDate.removed",
   "card.archived",
+  "card.updated.area", // Add new activity type
 ] as const;
 
 export type ActivityType = (typeof activityTypes)[number];
@@ -74,6 +76,9 @@ export const cards = pgTable("card", {
     .references(() => lists.id, { onDelete: "cascade" }),
   importId: bigint("importId", { mode: "number" }).references(() => imports.id),
   dueDate: timestamp("dueDate"),
+  areaId: bigint("areaId", { mode: "number" }).references(() => areas.id, {
+    onDelete: "set null",
+  }),
 }).enableRLS();
 
 export const cardsRelations = relations(cards, ({ one, many }) => ({
@@ -91,6 +96,11 @@ export const cardsRelations = relations(cards, ({ one, many }) => ({
     fields: [cards.deletedBy],
     references: [users.id],
     relationName: "cardsDeletedByUser",
+  }),
+  area: one(areas, {
+    fields: [cards.areaId],
+    references: [areas.id],
+    relationName: "cardArea",
   }),
   labels: many(cardsToLabels),
   members: many(cardToWorkspaceMembers),

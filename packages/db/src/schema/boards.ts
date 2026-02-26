@@ -14,6 +14,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
+import { areas } from "./areas";
 import { imports } from "./imports";
 import { labels } from "./labels";
 import { lists } from "./lists";
@@ -78,6 +79,7 @@ export const boardsRelations = relations(boards, ({ one, many }) => ({
   lists: many(lists),
   allLists: many(lists),
   labels: many(labels),
+  areas: many(areas),
   deletedBy: one(users, {
     fields: [boards.deletedBy],
     references: [users.id],
@@ -110,5 +112,19 @@ export const userBoardFavorites = pgTable(
     pk: primaryKey({ columns: [table.userId, table.boardId] }),
     userIdx: index("user_board_favorite_user_idx").on(table.userId),
     boardIdx: index("user_board_favorite_board_idx").on(table.boardId),
+  }),
+);
+
+export const userBoardFavoritesRelations = relations(
+  userBoardFavorites,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [userBoardFavorites.userId],
+      references: [users.id],
+    }),
+    board: one(boards, {
+      fields: [userBoardFavorites.boardId],
+      references: [boards.id],
+    }),
   }),
 );

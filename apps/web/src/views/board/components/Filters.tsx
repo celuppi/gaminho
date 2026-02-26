@@ -3,6 +3,7 @@ import { t } from "@lingui/core/macro";
 import {
   HiMiniXMark,
   HiOutlineClock,
+  HiOutlineMap,
   HiOutlineSquare3Stack3D,
   HiOutlineTag,
   HiOutlineUserCircle,
@@ -39,17 +40,25 @@ interface List {
   name: string;
 }
 
+interface Area {
+  publicId: string;
+  name: string;
+  colourCode: string | null;
+}
+
 const Filters = ({
   position = "right",
   labels,
   members,
   lists,
+  areas,
   isLoading,
 }: {
   position?: "left" | "right";
   labels: Label[];
   members: Member[];
   lists: List[];
+  areas: Area[];
   isLoading: boolean;
 }) => {
   const router = useRouter();
@@ -66,6 +75,7 @@ const Filters = ({
           members: [],
           labels: [],
           lists: [],
+          areas: [],
           dueDate: [],
         },
       });
@@ -98,6 +108,13 @@ const Filters = ({
     value: label.name,
     selected: !!router.query.labels?.includes(label.publicId),
     leftIcon: <LabelIcon colourCode={label.colourCode} />,
+  }));
+
+  const formattedAreas = areas.map((area) => ({
+    key: area.publicId,
+    value: area.name,
+    selected: !!router.query.areas?.includes(area.publicId),
+    leftIcon: <LabelIcon colourCode={area.colourCode} />,
   }));
 
   const formattedLists = lists.map((list) => ({
@@ -156,6 +173,12 @@ const Filters = ({
       icon: <HiOutlineTag size={16} />,
       items: formattedLabels,
     },
+    {
+      key: "areas",
+      label: t`Areas`,
+      icon: <HiOutlineMap size={16} />,
+      items: formattedAreas,
+    },
     ...(formattedLists.length
       ? [
           {
@@ -202,6 +225,7 @@ const Filters = ({
     ...formatToArray(router.query.members),
     ...formatToArray(router.query.labels),
     ...formatToArray(router.query.lists),
+    ...formatToArray(router.query.areas),
     ...formatToArray(router.query.dueDate),
   ].length;
 

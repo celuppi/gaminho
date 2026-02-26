@@ -57,7 +57,7 @@ COPY --from=pruner /app/out/full/ .
 
 # Use provided APP_VERSION or auto-generated from pruner stage
 RUN VERSION="${APP_VERSION:-$(cat /tmp/AUTO_VERSION 2>/dev/null | tr -d '\n\r' || echo 'unknown')}" && \
-    NEXT_PUBLIC_APP_VERSION="$VERSION" pnpm build --filter=${PROJECT}
+    TURBO_CACHE_DIR=/tmp/.turbo NEXT_PUBLIC_APP_VERSION="$VERSION" pnpm build --filter=${PROJECT}
 
 # # Copy static files to standalone directory
 # RUN mkdir -p apps/web/.next/standalone/.next && \

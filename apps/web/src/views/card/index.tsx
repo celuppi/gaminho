@@ -11,6 +11,7 @@ import { authClient } from "@kan/auth/client";
 import Avatar from "~/components/Avatar";
 import Editor from "~/components/Editor";
 import FeedbackModal from "~/components/FeedbackModal";
+import { AreaForm } from "~/components/AreaForm";
 import { LabelForm } from "~/components/LabelForm";
 import LabelIcon from "~/components/LabelIcon";
 import Modal from "~/components/modal";
@@ -25,6 +26,7 @@ import { api } from "~/utils/api";
 import { invalidateCard } from "~/utils/cardInvalidation";
 import { formatMemberDisplayName, getAvatarUrl } from "~/utils/helpers";
 import { DeleteLabelConfirmation } from "../../components/DeleteLabelConfirmation";
+import { DeleteAreaConfirmation } from "../../components/DeleteAreaConfirmation";
 import ActivityList from "./components/ActivityList";
 import { AttachmentThumbnails } from "./components/AttachmentThumbnails";
 import { AttachmentUpload } from "./components/AttachmentUpload";
@@ -35,6 +37,7 @@ import { DeleteCommentConfirmation } from "./components/DeleteCommentConfirmatio
 import Dropdown from "./components/Dropdown";
 import { DueDateSelector } from "./components/DueDateSelector";
 import LabelSelector from "./components/LabelSelector";
+import AreaSelector from "./components/AreaSelector";
 import ListSelector from "./components/ListSelector";
 import MemberSelector from "./components/MemberSelector";
 import { NewChecklistForm } from "./components/NewChecklistForm";
@@ -68,6 +71,7 @@ export function CardRightPanel({ isTemplate }: { isTemplate?: boolean }) {
 
   const board = card?.list.board;
   const labels = board?.labels;
+  const areas = board?.areas;
   const workspaceMembers = board?.workspace.members;
   const selectedLabels = card?.labels;
   const selectedMembers = card?.members;
@@ -83,6 +87,18 @@ export function CardRightPanel({ isTemplate }: { isTemplate?: boolean }) {
         value: label.name,
         selected: isSelected ?? false,
         leftIcon: <LabelIcon colourCode={label.colourCode} />,
+      };
+    }) ?? [];
+
+  const formattedAreas =
+    areas?.map((area) => {
+      const isSelected = card?.area?.publicId === area.publicId;
+
+      return {
+        key: area.publicId,
+        value: area.name,
+        selected: isSelected ?? false,
+        leftIcon: <LabelIcon colourCode={area.colourCode} />,
       };
     }) ?? [];
 
@@ -129,6 +145,15 @@ export function CardRightPanel({ isTemplate }: { isTemplate?: boolean }) {
         <ListSelector
           cardPublicId={cardId ?? ""}
           lists={formattedLists}
+          isLoading={!card}
+          disabled={!canEdit}
+        />
+      </div>
+      <div className="mb-4 flex w-full flex-row">
+        <p className="my-2 mb-2 w-[100px] text-sm font-medium">{t`Area`}</p>
+        <AreaSelector
+          cardPublicId={cardId ?? ""}
+          areas={formattedAreas}
           isLoading={!card}
           disabled={!canEdit}
         />
@@ -285,6 +310,18 @@ export default function CardPage({ isTemplate }: { isTemplate?: boolean }) {
       clearModalState("NEW_LABEL_CREATED");
     }
   }, [modalStates.NEW_LABEL_CREATED, card, cardId]);
+
+  // this sets the new created area to the card
+  useEffect(() => {
+    const newAreaId = modalStates.NEW_AREA_CREATED;
+    if (newAreaId && cardId) {
+      updateCard.mutate({
+        cardPublicId: cardId,
+        areaPublicId: newAreaId,
+      });
+      clearModalState("NEW_AREA_CREATED");
+    }
+  }, [modalStates.NEW_AREA_CREATED, cardId]);
 
   // Open the new item form after creating a new checklist
   useEffect(() => {
@@ -510,6 +547,34 @@ export default function CardPage({ isTemplate }: { isTemplate?: boolean }) {
             <DeleteLabelConfirmation
               refetch={refetchCard}
               labelPublicId={entityId}
+            />
+          </Modal>
+
+          <Modal
+            modalSize="sm"
+            isVisible={isOpen && modalContentType === "NEW_AREA"}
+          >
+            <AreaForm boardPublicId={boardId ?? ""} refetch={refetchCard} />
+          </Modal>
+
+          <Modal
+            modalSize="sm"
+            isVisible={isOpen && modalContentType === "EDIT_AREA"}
+          >
+            <AreaForm
+              boardPublicId={boardId ?? ""}
+              refetch={refetchCard}
+              isEdit
+            />
+          </Modal>
+
+          <Modal
+            modalSize="sm"
+            isVisible={isOpen && modalContentType === "DELETE_AREA"}
+          >
+            <DeleteAreaConfirmation
+              refetch={refetchCard}
+              areaPublicId={entityId}
             />
           </Modal>
 

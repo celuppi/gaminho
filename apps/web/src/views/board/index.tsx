@@ -18,6 +18,8 @@ import type { UpdateBoardInput } from "@kan/api/types";
 import { authClient } from "@kan/auth/client";
 
 import Button from "~/components/Button";
+import { AreaForm } from "~/components/AreaForm";
+import { DeleteAreaConfirmation } from "~/components/DeleteAreaConfirmation";
 import { DeleteLabelConfirmation } from "~/components/DeleteLabelConfirmation";
 import { LabelForm } from "~/components/LabelForm";
 import Modal from "~/components/modal";
@@ -123,6 +125,7 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
     members: formatToArray(router.query.members),
     labels: formatToArray(router.query.labels),
     lists: formatToArray(router.query.lists),
+    areas: formatToArray(router.query.areas),
     ...(semanticFilters.length > 0 && {
       dueDateFilters: semanticFilters,
     }),
@@ -281,13 +284,13 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
     }
 
     if (type === "CARD") {
-      const card = boardData?.allLists
+      const card = boardData?.lists
         .flatMap((l) => l.cards)
         .find((c) => c.publicId === draggableId);
       const isCreator =
         card?.createdBy && session?.user.id === card.createdBy;
       const isMember = card?.members.some(
-        (member) => member.user?.id === session?.user.id,
+        (member) => member.userId === session?.user.id,
       );
       const canEdit =
         canEditCard ||
@@ -387,6 +390,34 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
 
         <Modal
           modalSize="sm"
+          isVisible={isOpen && modalContentType === "NEW_AREA"}
+        >
+          <AreaForm boardPublicId={boardId ?? ""} refetch={refetchBoard} />
+        </Modal>
+
+        <Modal
+          modalSize="sm"
+          isVisible={isOpen && modalContentType === "EDIT_AREA"}
+        >
+          <AreaForm
+            boardPublicId={boardId ?? ""}
+            refetch={refetchBoard}
+            isEdit
+          />
+        </Modal>
+
+        <Modal
+          modalSize="sm"
+          isVisible={isOpen && modalContentType === "DELETE_AREA"}
+        >
+          <DeleteAreaConfirmation
+            refetch={refetchBoard}
+            areaPublicId={entityId}
+          />
+        </Modal>
+
+        <Modal
+          modalSize="sm"
           isVisible={isOpen && modalContentType === "UPDATE_BOARD_SLUG"}
         >
           <UpdateBoardSlugForm
@@ -402,7 +433,7 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
           isVisible={isOpen && modalContentType === "CREATE_TEMPLATE"}
         >
           <NewTemplateForm
-            workspacePublicId={workspace.publicId ?? ""}
+            workspacePublicId={workspace.publicId}
             sourceBoardPublicId={boardId ?? ""}
             sourceBoardName={boardData?.name ?? ""}
           />
@@ -486,6 +517,7 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                       (member) => member.user !== null,
                     )}
                     lists={boardData.allLists}
+                    areas={boardData.areas}
                     position="left"
                     isLoading={!boardData}
                   />
@@ -518,7 +550,6 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
               isTemplate={!!isTemplate}
               isLoading={!boardData}
               boardPublicId={boardId ?? ""}
-              workspacePublicId={workspace.publicId}
               isFavorite={boardData?.favorite}
               boardName={boardData?.name}
             />
@@ -610,7 +641,7 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                                           (canEditAssignedCard &&
                                             card.members.some(
                                               (m) =>
-                                                m.user?.id === session?.user.id,
+                                                m.userId === session?.user.id,
                                             ))
                                         )
                                       }
@@ -646,13 +677,12 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                                             title={card.title}
                                             labels={card.labels}
                                             members={card.members}
-                                            checklists={card.checklists ?? []}
-                                            description={
-                                              card.description ?? null
-                                            }
-                                            comments={card.comments ?? []}
+                                            checklists={card.checklists}
+                                            description={card.description}
+                                            comments={card.comments}
                                             attachments={card.attachments}
-                                            dueDate={card.dueDate ?? null}
+                                            dueDate={card.dueDate}
+                                            area={card.area}
                                           />
                                         </Link>
                                       )}

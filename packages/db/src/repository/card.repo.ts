@@ -12,6 +12,7 @@ import {
 
 import type { dbClient } from "@kan/db/client";
 import {
+  areas,
   cardActivities,
   cardAttachments,
   cards,
@@ -43,6 +44,7 @@ export const create = async (
     listId: number;
     position: "start" | "end";
     dueDate?: Date | null;
+    areaId?: number | null;
   },
 ) => {
   return db.transaction(async (tx) => {
@@ -92,6 +94,7 @@ export const create = async (
         listId: cardInput.listId,
         index: index,
         dueDate: cardInput.dueDate ?? null,
+        areaId: cardInput.areaId,
       })
       .returning({ id: cards.id, listId: cards.listId, publicId: cards.publicId });
 
@@ -185,6 +188,7 @@ export const update = async (
     title?: string;
     description?: string;
     dueDate?: Date | null;
+    areaId?: number | null;
   },
   args: {
     cardPublicId: string;
@@ -196,6 +200,7 @@ export const update = async (
       title: cardInput.title,
       description: cardInput.description,
       dueDate: cardInput.dueDate !== undefined ? cardInput.dueDate : undefined,
+      areaId: cardInput.areaId !== undefined ? cardInput.areaId : undefined,
       updatedAt: new Date(),
     })
     .where(and(eq(cards.publicId, args.cardPublicId), isNull(cards.deletedAt)))
@@ -439,6 +444,13 @@ export const getWithListAndMembersByPublicId = async (
           },
         },
       },
+      area: {
+        columns: {
+          publicId: true,
+          name: true,
+          colourCode: true,
+        },
+      },
       attachments: {
         columns: {
           publicId: true,
@@ -475,6 +487,7 @@ export const getWithListAndMembersByPublicId = async (
         columns: {
           publicId: true,
           name: true,
+          index: true,
         },
         with: {
           board: {
@@ -490,6 +503,14 @@ export const getWithListAndMembersByPublicId = async (
                   name: true,
                 },
                 where: isNull(labels.deletedAt),
+              },
+              areas: {
+                 columns: {
+                    publicId: true,
+                    name: true,
+                    colourCode: true,
+                 },
+                 where: isNull(areas.deletedAt),
               },
               lists: {
                 columns: {
@@ -527,7 +548,6 @@ export const getWithListAndMembersByPublicId = async (
             },
           },
         },
-        // https://github.com/drizzle-team/drizzle-orm/issues/2903
         // where: isNull(lists.deletedAt),
       },
       members: {
@@ -546,8 +566,6 @@ export const getWithListAndMembersByPublicId = async (
                 },
               },
             },
-            // https://github.com/drizzle-team/drizzle-orm/issues/2903
-            // where: isNull(workspaceMembers.deletedAt),
           },
         },
       },
