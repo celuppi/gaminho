@@ -2,16 +2,62 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Next.js",
+      "name": "Kan: Full Dev (pnpm dev)",
       "type": "node-terminal",
       "request": "launch",
       "command": "pnpm dev",
+      "cwd": "${workspaceFolder}",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Kan: Next.js Only",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm dev:next",
+      "cwd": "${workspaceFolder}",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "/turbopack/[project]/*": "${webRoot}/*"
+      }
+    },
+    {
+      "name": "Kan: Next.js Server Debug",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm with-env next dev --turbo --inspect",
       "cwd": "${workspaceFolder}/apps/web",
       "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true,
       "sourceMapPathOverrides": {
         "/turbopack/[project]/*": "${webRoot}/*"
       }
+    },
+    {
+      "name": "Kan: Chrome Client Debug",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/apps/web",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "/turbopack/[project]/*": "${webRoot}/*"
+      }
+    },
+    {
+      "name": "Kan: DB Migrate",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm db:migrate",
+      "cwd": "${workspaceFolder}",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Kan: Full Stack Debug",
+      "configurations": ["Kan: Next.js Server Debug", "Kan: Chrome Client Debug"],
+      "stopAll": true
     }
   ]
 }
