@@ -4,10 +4,12 @@ import { useParams } from "next/navigation";
 import { useRouter } from "next/router";
 import { t } from "@lingui/core/macro";
 import { keepPreviousData } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DragDropContext, Draggable } from "react-beautiful-dnd";
 import { useForm } from "react-hook-form";
 import {
+  HiMiniXMark,
+  HiOutlineMagnifyingGlass,
   HiOutlinePlusSmall,
   HiOutlineRectangleStack,
   HiOutlineSquare3Stack3D,
@@ -61,6 +63,9 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
   const { openModal, modalContentType, entityId, isOpen } = useModal();
   const [selectedPublicListId, setSelectedPublicListId] =
     useState<PublicListId>("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const { ref: scrollRef, onMouseDown } = useDragToScroll({
@@ -293,8 +298,8 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
         (member) => member.userId === session?.user.id,
       );
       const canEdit =
-        canEditCard ||
-        (canEditOwnCard && isCreator) ||
+        canEditCard ??
+        (canEditOwnCard && isCreator) ??
         (canEditAssignedCard && isMember);
 
       if (canEdit) {
@@ -452,11 +457,11 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
   return (
     <>
       <PageHead
-        title={`${boardData?.name ?? (isTemplate ? t`Board` : t`Template`)} | ${workspace.name ?? t`Workspace`}`}
+        title={`${boardData?.name ?? (isTemplate ? t`Board` : t`Template`)} | ${workspace.name}`}
       />
       <div className="relative flex h-full flex-col">
         <PatternedBackground />
-        <div className="z-10 flex w-full flex-col justify-between p-6 md:flex-row md:p-8">
+        <div className="z-10 flex w-full flex-col p-6 md:p-8">
           {isLoading && !boardData && (
             <div className="flex space-x-2">
               <div className="h-[2.3rem] w-[150px] animate-pulse rounded-[5px] bg-light-200 dark:bg-dark-100" />
@@ -465,7 +470,7 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
           {boardData && (
             <form
               onSubmit={handleSubmit(onSubmit)}
-              className="order-2 focus-visible:outline-none md:order-1"
+              className="focus-visible:outline-none"
             >
               <input
                 id="name"
@@ -478,11 +483,11 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
             </form>
           )}
           {!boardData && !isLoading && (
-            <p className="order-2 block p-0 py-0 font-bold leading-[2.3rem] tracking-tight text-neutral-900 dark:text-dark-1000 sm:text-[1.2rem] md:order-1">
+            <p className="block p-0 py-0 font-bold leading-[2.3rem] tracking-tight text-neutral-900 dark:text-dark-1000 sm:text-[1.2rem]">
               {t`${isTemplate ? "Template" : "Board"} not found`}
             </p>
           )}
-          <div className="order-1 mb-4 flex items-center justify-end space-x-2 md:order-2 md:mb-0">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             {isTemplate && (
               <div className="inline-flex cursor-default items-center justify-center whitespace-nowrap rounded-md border-[1px] border-light-300 bg-light-50 px-3 py-2 text-sm font-semibold text-light-950 shadow-sm dark:border-dark-300 dark:bg-dark-50 dark:text-dark-950">
                 <span className="mr-2">
@@ -522,6 +527,57 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                     isLoading={!boardData}
                   />
                 )}
+                <div className="relative flex items-center">
+                  {isSearchOpen && (
+                    <div className="flex items-center overflow-hidden rounded-md border-[1px] border-light-600 bg-light-50 shadow-sm dark:border-dark-600 dark:bg-dark-300">
+                      <HiOutlineMagnifyingGlass className="ml-2 h-4 w-4 text-light-700 dark:text-dark-800" />
+                      <input
+                        ref={searchInputRef}
+                        id="board-search-input"
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Escape") {
+                            setSearchQuery("");
+                            setIsSearchOpen(false);
+                          }
+                        }}
+                        placeholder={t`Pesquisar cards...`}
+                        className="w-[160px] border-0 bg-transparent px-2 py-2 text-sm text-light-1000 placeholder-light-600 focus:ring-0 focus-visible:outline-none dark:text-dark-1000 dark:placeholder-dark-600"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchQuery("");
+                          setIsSearchOpen(false);
+                        }}
+                        className="mr-1 rounded p-1 text-light-700 hover:text-light-1000 dark:text-dark-800 dark:hover:text-dark-1000"
+                      >
+                        <HiMiniXMark className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                  {!isSearchOpen && (
+                    <Button
+                      variant="secondary"
+                      iconOnly
+                      iconLeft={
+                        <HiOutlineMagnifyingGlass className="h-5 w-5 stroke-[2.5] text-light-1000 dark:text-dark-1000" />
+                      }
+                      disabled={!boardData}
+                      onClick={() => {
+                        setIsSearchOpen(true);
+                        setTimeout(() => searchInputRef.current?.focus(), 50);
+                      }}
+                    />
+                  )}
+                  {searchQuery && (
+                    <span className="absolute -right-[8px] -top-[8px] flex h-5 w-5 items-center justify-center rounded-full border-2 border-light-100 bg-light-1000 text-[8px] font-[700] text-light-50 dark:border-dark-50 dark:bg-dark-1000 dark:text-dark-50">
+                      !
+                    </span>
+                  )}
+                </div>
               </>
             )}
             <Tooltip
@@ -611,7 +667,15 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                         {...provided.droppableProps}
                       >
                         <div className="min-w-[2rem]" />
-                        {boardData.lists.map((list, index) => (
+                        {boardData.lists.map((list, index) => {
+                          const filteredCards = searchQuery
+                            ? list.cards.filter((card) =>
+                                card.title
+                                  .toLowerCase()
+                                  .includes(searchQuery.toLowerCase()),
+                              )
+                            : list.cards;
+                          return (
                           <List
                             index={index}
                             key={index}
@@ -630,7 +694,7 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                                   {...provided.droppableProps}
                                   className="scrollbar-track-rounded-[4px] scrollbar-thumb-rounded-[4px] scrollbar-w-[8px] z-10 h-full max-h-[calc(100vh-225px)] min-h-[2rem] overflow-y-auto pr-1 scrollbar dark:scrollbar-track-dark-100 dark:scrollbar-thumb-dark-600"
                                 >
-                                  {list.cards.map((card, index) => (
+                                  {filteredCards.map((card, index) => (
                                     <Draggable
                                       key={card.publicId}
                                       draggableId={card.publicId}
@@ -693,7 +757,8 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                               )}
                             </Droppable>
                           </List>
-                        ))}
+                        );
+                        })}
                         <div className="min-w-[0.75rem]" />
                         {provided.placeholder}
                       </div>

@@ -2,12 +2,12 @@ import { i18n } from "@lingui/core";
 
 import type { Locale } from "~/locales";
 import { defaultLocale } from "~/locales";
-import { messages as enMessages } from "~/locales/en/messages";
+import { messages as ptBRMessages } from "~/locales/pt-BR/messages";
 
 const loadMessages = async (locale: Locale) => {
   switch (locale) {
     case "en":
-      return enMessages;
+      return (await import("~/locales/en/messages")).messages;
     case "fr":
       return (await import("~/locales/fr/messages")).messages;
     case "de":
@@ -23,9 +23,9 @@ const loadMessages = async (locale: Locale) => {
     case "pl":
       return (await import("~/locales/pl/messages")).messages;
     case "pt-BR":
-      return (await import("~/locales/pt-BR/messages")).messages;
+      return ptBRMessages;
     default:
-      return enMessages;
+      return ptBRMessages;
   }
 };
 
@@ -34,7 +34,7 @@ const loadedLocales = new Set<string>();
 
 export function initializeI18n(locale: Locale = defaultLocale) {
   if (!isInitialized) {
-    i18n.load(defaultLocale, enMessages);
+    i18n.load(defaultLocale, ptBRMessages);
     i18n.activate(defaultLocale);
     loadedLocales.add(defaultLocale);
     isInitialized = true;
