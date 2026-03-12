@@ -1,6 +1,7 @@
 services:
   web:
     image: ghcr.io/celuppi/gaminho:latest
+    pull_policy: always
     container_name: ${CONTAINER_NAME:-kan-web}
 
     env_file:
