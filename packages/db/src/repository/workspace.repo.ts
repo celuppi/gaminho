@@ -303,7 +303,7 @@ export const getAllByUserId = async (db: dbClient, userId: string) => {
     ),
   });
 
-  return result.filter((member) => !member.workspace.deletedAt);
+  return result.filter((member) => member.workspace && !member.workspace.deletedAt);
 };
 
 export const getMemberByPublicId = (db: dbClient, memberPublicId: string) => {
