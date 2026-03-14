@@ -83,7 +83,7 @@ export default function CheckboxDropdown({
               )}
               <label
                 htmlFor={item.key}
-                className="ml-3 text-[12px] text-dark-900"
+                className="ml-3 text-[12px] text-light-900 dark:text-dark-900"
               >
                 {item.value}
               </label>
@@ -97,7 +97,7 @@ export default function CheckboxDropdown({
                     handleEdit(item.key);
                   }}
                 >
-                  <HiEllipsisHorizontal size={20} className="text-dark-900" />
+                  <HiEllipsisHorizontal size={20} className="text-light-900 dark:text-dark-900" />
                 </button>
               )}
             </div>
@@ -105,7 +105,7 @@ export default function CheckboxDropdown({
         ))
       ) : (
         !handleCreate && (
-          <div className="flex items-center p-2 text-[12px] text-dark-900">
+          <div className="flex items-center p-2 text-[12px] text-light-900 dark:text-dark-900">
             No items
           </div>
         )
@@ -113,7 +113,7 @@ export default function CheckboxDropdown({
       {handleCreate && (
         <button
           type="button"
-          className="flex w-full items-center rounded-[5px] p-2 px-2 text-[12px] text-dark-900 hover:bg-light-200 dark:hover:bg-dark-300"
+          className="flex w-full items-center rounded-[5px] p-2 px-2 text-[12px] text-light-900 hover:bg-light-200 dark:text-dark-900 dark:hover:bg-dark-300"
           onClick={(e) => {
             e.preventDefault();
             handleCreate();
@@ -171,8 +171,8 @@ export default function CheckboxDropdown({
                           setSelectedGroup(group.key);
                         }}
                       >
-                        <span className="mr-2 text-dark-900">{group.icon}</span>
-                        <span className="pointer-events-none text-[12px] text-dark-900">
+                        <span className="mr-2 text-light-900 dark:text-dark-900">{group.icon}</span>
+                        <span className="pointer-events-none text-[12px] text-light-900 dark:text-dark-900">
                           {group.label}
                         </span>
                       </div>
@@ -183,7 +183,7 @@ export default function CheckboxDropdown({
                 <>
                   {groups?.find((g) => g.key === selectedGroup)?.items &&
                     renderMenuItems(
-                      groups.find((g) => g.key === selectedGroup)?.items || [],
+                      groups.find((g) => g.key === selectedGroup)?.items ?? [],
                       selectedGroup,
                     )}
                 </>
