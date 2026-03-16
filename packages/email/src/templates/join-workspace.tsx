@@ -22,7 +22,9 @@ export const JoinWorkspaceTemplate = ({
 }) => (
   <Html>
     <Head />
-    <Preview>Join {workspaceName ?? "workspace"} on kan.bn</Preview>
+    <Preview>
+      Participe de {workspaceName ?? "uma área de trabalho"} no kan.bn
+    </Preview>
     <Body style={{ backgroundColor: "white" }}>
       <Container
         style={{
@@ -48,10 +50,10 @@ export const JoinWorkspaceTemplate = ({
           style={{ fontSize: "24px", fontWeight: "bold", color: "#232323" }}
         >
           {inviterName
-            ? `${inviterName} invited you to join ${
-                workspaceName ?? "a workspace"
+            ? `${inviterName} convidou você para participar de ${
+                workspaceName ?? "uma área de trabalho"
               }`
-            : `You've been invited to join ${workspaceName ?? "a workspace"}`}
+            : `Você foi convidado(a) para participar de ${workspaceName ?? "uma área de trabalho"}`}
         </Heading>
         <Text
           style={{
@@ -60,7 +62,8 @@ export const JoinWorkspaceTemplate = ({
             color: "#232323",
           }}
         >
-          Click the button below to add this workspace to your account.
+          Clique no botão abaixo para adicionar esta área de trabalho à sua
+          conta.
         </Text>
         <Button
           target="_blank"
@@ -79,7 +82,7 @@ export const JoinWorkspaceTemplate = ({
             color: "white",
           }}
         >
-          Join {workspaceName ?? "workspace"}
+          Participar de {workspaceName ?? "área de trabalho"}
         </Button>
         <Text
           style={{
@@ -88,7 +91,8 @@ export const JoinWorkspaceTemplate = ({
             color: "#7e7e7e",
           }}
         >
-          If you don&apos;t want to join this workspace, you can safely ignore this email.
+          Se você não deseja participar desta área de trabalho, pode ignorar
+          este e-mail com segurança.
         </Text>
         {env("NEXT_PUBLIC_WHITE_LABEL_HIDE_POWERED_BY") !== "true" && (
           <>
@@ -104,10 +108,7 @@ export const JoinWorkspaceTemplate = ({
                 href={env("NEXT_PUBLIC_BASE_URL")}
                 target="_blank"
                 style={{ color: "#7e7e7e", textDecoration: "underline" }}
-              >
-                Kan
-              </Link>
-              , the open source Trello alternative.
+              ></Link>
             </Text>
           </>
         )}

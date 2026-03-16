@@ -18,7 +18,7 @@ export const MagicLinkTemplate = ({
 }) => (
   <Html>
     <Head />
-    <Preview>Log in with this magic link</Preview>
+    <Preview>Faça login com este link mágico</Preview>
     <Body style={{ backgroundColor: "white" }}>
       <Container
         style={{
@@ -43,7 +43,7 @@ export const MagicLinkTemplate = ({
         <Heading
           style={{ fontSize: "24px", fontWeight: "bold", color: "#232323" }}
         >
-          Login to your Kan account
+          Faça login na sua conta Kan
         </Heading>
         <Text
           style={{
@@ -52,7 +52,7 @@ export const MagicLinkTemplate = ({
             color: "#232323",
           }}
         >
-          Click the button below to instantly login to your account.
+          Clique no botão abaixo para acessar sua conta instantaneamente.
         </Text>
         <Button
           target="_blank"
@@ -71,7 +71,7 @@ export const MagicLinkTemplate = ({
             color: "white",
           }}
         >
-          Login to your account
+          Acessar sua conta
         </Button>
         <Text
           style={{
@@ -80,7 +80,7 @@ export const MagicLinkTemplate = ({
             color: "#7e7e7e",
           }}
         >
-          If you didn&apos;t try to login, you can safely ignore this email.
+          Se você não tentou fazer login, pode ignorar este e-mail com segurança.
         </Text>
         <Hr
           style={{
@@ -94,10 +94,7 @@ export const MagicLinkTemplate = ({
             href={env("NEXT_PUBLIC_BASE_URL")}
             target="_blank"
             style={{ color: "#7e7e7e", textDecoration: "underline" }}
-          >
-            Kan
-          </Link>
-          , the open source Trello alternative.
+          ></Link>
         </Text>
       </Container>
     </Body>

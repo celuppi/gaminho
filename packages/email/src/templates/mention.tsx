@@ -25,7 +25,7 @@ export const MentionTemplate = ({
   <Html>
     <Head />
     <Preview>
-      {commenterName} mentioned you in a comment on {cardTitle}
+      {commenterName} mencionou você em um comentário no cartão {cardTitle}
     </Preview>
     <Body style={{ backgroundColor: "white" }}>
       <Container
@@ -51,7 +51,7 @@ export const MentionTemplate = ({
         <Heading
           style={{ fontSize: "24px", fontWeight: "bold", color: "#232323" }}
         >
-          You were mentioned in a comment
+          Você foi mencionado(a) em um comentário
         </Heading>
         <Text
           style={{
@@ -60,8 +60,9 @@ export const MentionTemplate = ({
             color: "#232323",
           }}
         >
-          <strong>{commenterName}</strong> mentioned you in a comment on the
-          card <strong>{cardTitle}</strong> in the board <strong>{boardName}</strong>.
+          <strong>{commenterName}</strong> mencionou você em um comentário no
+          cartão <strong>{cardTitle}</strong> no quadro{" "}
+          <strong>{boardName}</strong>.
         </Text>
         <Button
           target="_blank"
@@ -80,7 +81,7 @@ export const MentionTemplate = ({
             color: "white",
           }}
         >
-          View Card
+          Ver Cartão
         </Button>
         <Hr
           style={{
@@ -94,10 +95,7 @@ export const MentionTemplate = ({
             href={env("NEXT_PUBLIC_BASE_URL")}
             target="_blank"
             style={{ color: "#7e7e7e", textDecoration: "underline" }}
-          >
-            Kan
-          </Link>
-          , the open source Trello alternative.
+          ></Link>
         </Text>
       </Container>
     </Body>
@@ -105,4 +103,3 @@ export const MentionTemplate = ({
 );
 
 export default MentionTemplate;
-

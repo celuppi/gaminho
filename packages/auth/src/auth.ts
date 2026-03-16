@@ -38,7 +38,7 @@ export const initAuth = (db: dbClient) => {
       disableSignUp:
         env("NEXT_PUBLIC_DISABLE_SIGN_UP")?.toLowerCase() === "true",
       sendResetPassword: async (data) => {
-        await sendEmail(data.user.email, "Reset Password", "RESET_PASSWORD", {
+        await sendEmail(data.user.email, "Redefinir Senha", "RESET_PASSWORD", {
           resetPasswordUrl: data.url,
           resetPasswordToken: data.token,
         });
