@@ -13,7 +13,12 @@ import { generateAttachmentUrl, generateAvatarUrl } from "@kan/shared/utils";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { mergeActivities } from "../utils/activities";
-import { sendMentionEmails } from "../utils/notifications";
+import {
+  sendAddedToCardEmails,
+  sendCardUpdatedEmails,
+  sendMentionEmails,
+  sendRemovedFromCardEmails,
+} from "../utils/notifications";
 import {
   assertCanDelete,
   assertCanEdit,
@@ -178,6 +183,15 @@ export const cardRouter = createTRPCRouter({
         }));
 
         await cardActivityRepo.bulkCreate(ctx.db, cardActivitesInsert);
+
+        sendAddedToCardEmails({
+          db: ctx.db,
+          cardPublicId: newCard.publicId,
+          adderUserId: userId,
+          addedMemberPublicIds: input.memberPublicIds,
+        }).catch((error) => {
+          console.error("Failed to send added to card emails:", error);
+        });
       }
 
       if (input.description) {
@@ -655,6 +669,15 @@ export const cardRouter = createTRPCRouter({
           createdBy: userId,
         });
 
+        sendRemovedFromCardEmails({
+          db: ctx.db,
+          cardPublicId: input.cardPublicId,
+          removerUserId: userId,
+          removedMemberPublicId: input.workspaceMemberPublicId,
+        }).catch((error) => {
+          console.error("Failed to send removed from card emails:", error);
+        });
+
         return { newMember: false };
       }
 
@@ -672,6 +695,15 @@ export const cardRouter = createTRPCRouter({
         cardId: card.id,
         workspaceMemberId: member.id,
         createdBy: userId,
+      });
+
+      sendAddedToCardEmails({
+        db: ctx.db,
+        cardPublicId: input.cardPublicId,
+        adderUserId: userId,
+        addedMemberPublicIds: [input.workspaceMemberPublicId],
+      }).catch((error) => {
+        console.error("Failed to send added to card emails:", error);
       });
 
       return { newMember: true };
@@ -1073,6 +1105,7 @@ export const cardRouter = createTRPCRouter({
         });
 
       const activities = [];
+      const changes: string[] = [];
 
       // Area activity logging
       if (input.areaPublicId !== undefined) {
@@ -1082,6 +1115,7 @@ export const cardRouter = createTRPCRouter({
           createdBy: userId,
           // We can add from/to details if we fetch them, but for now simple log
         });
+        changes.push("Área atualizada");
       }
 
       if (input.title && existingCard.title !== input.title) {
@@ -1092,6 +1126,7 @@ export const cardRouter = createTRPCRouter({
           fromTitle: existingCard.title,
           toTitle: input.title,
         });
+        changes.push(`Título modificado para: ${input.title}`);
       }
 
       if (input.description && existingCard.description !== input.description) {
@@ -1102,6 +1137,7 @@ export const cardRouter = createTRPCRouter({
           fromDescription: existingCard.description ?? undefined,
           toDescription: input.description,
         });
+        changes.push("Descrição modificada");
 
         sendMentionEmails({
           db: ctx.db,
@@ -1137,6 +1173,14 @@ export const cardRouter = createTRPCRouter({
           fromDueDate: previousDueDate ?? undefined,
           toDueDate: input.dueDate ?? undefined,
         });
+
+        if (input.dueDate) {
+          changes.push(
+            `Data de entrega: ${input.dueDate.toLocaleDateString("pt-BR")}`,
+          );
+        } else {
+          changes.push("Data de entrega removida");
+        }
       }
 
       if (newListId && existingCard.listId !== newListId) {
@@ -1147,6 +1191,7 @@ export const cardRouter = createTRPCRouter({
           fromListId: existingCard.listId,
           toListId: newListId,
         });
+        changes.push("Lista modificada");
       }
 
       if (activities.length > 0) {
@@ -1163,6 +1208,18 @@ export const cardRouter = createTRPCRouter({
           toTitle: input.criticality,
           fromTitle: existingCard.criticality,
           createdBy: userId,
+        });
+        changes.push(`Criticidade alterada para: ${input.criticality}`);
+      }
+
+      if (changes.length > 0) {
+        sendCardUpdatedEmails({
+          db: ctx.db,
+          cardPublicId: input.cardPublicId,
+          updaterUserId: userId,
+          changesSummary: changes.join("\\n"),
+        }).catch((error) => {
+          console.error("Failed to send card updated emails:", error);
         });
       }
 

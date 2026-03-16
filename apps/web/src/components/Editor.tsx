@@ -66,7 +66,7 @@ export interface SlashCommandItem {
 export interface SlashCommandsOptions {
   suggestion?: Partial<SuggestionOptions>;
   commandItems?: SlashCommandItem[];
-  options?: any;
+  options?: Record<string, unknown>;
 }
 
 function filterSlashCommandItems(items: SlashCommandItem[], query: string) {
@@ -77,9 +77,16 @@ function filterSlashCommandItems(items: SlashCommandItem[], query: string) {
 
 export interface RenderSuggestionsProps {
   editor: TiptapEditor;
-  clientRect: () => DOMRect;
+  clientRect?: (() => DOMRect | null) | null;
   items: SlashCommandItem[];
   command: (item: SlashCommandItem) => void;
+}
+
+export interface RenderMentionSuggestionsProps {
+  editor: TiptapEditor;
+  clientRect?: (() => DOMRect | null) | null;
+  items: MentionItem[];
+  command: (item: MentionItem) => void;
 }
 
 export interface WorkspaceMember {
@@ -166,7 +173,7 @@ const RenderSuggestions = () => {
       if (!props.clientRect) return;
 
       popup = tippy("body", {
-        getReferenceClientRect: props.clientRect,
+        getReferenceClientRect: props.clientRect as () => DOMRect,
         appendTo: () => document.body,
         content: reactRenderer.element,
         showOnCreate: true,
@@ -181,7 +188,7 @@ const RenderSuggestions = () => {
       if (!props.clientRect) return;
 
       popup[0]?.setProps({
-        getReferenceClientRect: props.clientRect,
+        getReferenceClientRect: props.clientRect as () => DOMRect,
       });
     },
     onKeyDown(props: SuggestionKeyDownProps): boolean {
@@ -287,7 +294,7 @@ const renderMentionSuggestions = () => {
   let popup: TippyInstance[];
 
   return {
-    onStart: (props: any) => {
+    onStart: (props: RenderMentionSuggestionsProps) => {
       reactRenderer = new ReactRenderer(MentionList, {
         props,
         editor: props.editor,
@@ -296,7 +303,7 @@ const renderMentionSuggestions = () => {
       if (!props.clientRect) return;
 
       popup = tippy("body", {
-        getReferenceClientRect: props.clientRect,
+        getReferenceClientRect: props.clientRect as () => DOMRect,
         appendTo: () => document.body,
         content: reactRenderer.element,
         showOnCreate: true,
@@ -305,10 +312,10 @@ const renderMentionSuggestions = () => {
         placement: "bottom-start",
       });
     },
-    onUpdate(props: any) {
+    onUpdate(props: RenderMentionSuggestionsProps) {
       reactRenderer.updateProps(props);
       if (!props.clientRect) return;
-      popup[0]?.setProps({ getReferenceClientRect: props.clientRect });
+      popup[0]?.setProps({ getReferenceClientRect: props.clientRect as () => DOMRect });
     },
     onKeyDown(props: SuggestionKeyDownProps) {
       if (props.event.key === "Escape") {
@@ -338,7 +345,7 @@ const SlashCommands = Extension.create<SlashCommandsOptions>({
         char: "/",
         command: ({ editor, range, props }) => {
           editor.chain().focus().deleteRange(range).run();
-          props.command({ editor, range });
+          (props as SlashCommandItem).command?.({ editor, range });
         },
         items: ({ query }: { query: string }) => {
           return filterSlashCommandItems(
@@ -349,18 +356,18 @@ const SlashCommands = Extension.create<SlashCommandsOptions>({
         render: () => {
           let component: ReturnType<typeof RenderSuggestions>;
           return {
-            onStart: (props: any) => {
+            onStart: (props: RenderSuggestionsProps) => {
               component = RenderSuggestions();
               component.onStart(props);
             },
-            onUpdate(props: any) {
+            onUpdate(props: RenderSuggestionsProps) {
               component.onUpdate(props);
             },
-            onKeyDown(props: any) {
+            onKeyDown(props: SuggestionKeyDownProps) {
               if (props.event.key === "Escape") {
                 return true;
               }
-              return component.onKeyDown(props) ?? false;
+              return component.onKeyDown(props);
             },
             onExit: () => {
               component.onExit();
@@ -498,11 +505,14 @@ export default function Editor({
             items: ({ query }: { query: string }) => {
               const withEmail = workspaceMembers.filter((member) => member.email);
               
-              const mapped = withEmail.map((member: WorkspaceMember) => ({
-                id: member.publicId,
-                label: member?.user?.name?.trim() || member.email || "",
-                image: member?.user?.image ?? null,
-              }));
+              const mapped = withEmail.map((member: WorkspaceMember) => {
+                const name = member.user?.name?.trim() ?? null;
+                return {
+                  id: member.publicId,
+                  label: name ?? member.email,
+                  image: member.user?.image ?? null,
+                };
+              });
               
               const all: MentionItem[] = mapped.filter(
                 (item) => item.label && item.label.length > 0,

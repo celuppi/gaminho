@@ -27,6 +27,7 @@
   "devDependencies": {
     "@kan/prettier-config": "workspace:*",
     "@turbo/gen": "^2.3.1",
+    "@types/minimatch": "^5.1.2",
     "prettier": "catalog:",
     "turbo": "^2.3.1",
     "typescript": "catalog:"
@@ -34,7 +35,7 @@
   "prettier": "@kan/prettier-config",
   "pnpm": {
     "overrides": {
-      "@types/minimatch": "npm:minimatch@*",
+      "@types/minimatch": "^5.1.2",
       "@types/glob": "npm:@types/glob@^8.1.0",
       "react": "18.3.1",
       "react-dom": "18.3.1",
