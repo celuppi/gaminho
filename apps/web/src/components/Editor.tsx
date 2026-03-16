@@ -137,10 +137,10 @@ const CommandsList = forwardRef<
               index === selectedIndex && "bg-light-200 dark:bg-dark-300",
             )}
           >
-            <span className="text-dark-700 dark:text-dark-800">
+            <span className="text-light-500 dark:text-dark-700">
               {item.icon}
             </span>
-            <span className="ml-3 text-[12px] font-medium text-dark-900 dark:text-dark-1000">
+            <span className="ml-3 text-[12px] font-medium text-light-900 dark:text-dark-1000">
               {item.title}
             </span>
           </button>
@@ -263,14 +263,14 @@ const MentionList = forwardRef<
                 imageUrl={item.image ? getAvatarUrl(item.image) : undefined}
                 email={item.label}
               />
-              <span className="ml-3 text-[12px] font-medium text-dark-900 dark:text-dark-1000">
+              <span className="ml-3 text-[12px] font-medium text-light-900 dark:text-dark-1000">
                 {item.label}
               </span>
             </button>
           ))
         ) : (
           <div className="flex items-center justify-start p-2">
-            <span className="text-[12px] text-dark-900 dark:text-dark-1000">
+            <span className="text-[12px] text-light-500 dark:text-dark-800">
               No results
             </span>
           </div>
@@ -622,7 +622,7 @@ export default function Editor({
       {editor && <EditorBubbleMenu editor={editor} />}
       <EditorContent
         editor={editor}
-        className="prose dark:prose-invert prose-sm max-w-none overflow-y-auto [&_blockquote]:!text-xs [&_h1]:!text-lg [&_h2]:!text-base [&_h3]:!text-sm [&_ol]:!text-xs [&_p.is-empty::before]:text-light-900 [&_p.is-empty::before]:dark:text-dark-800 [&_p]:!text-sm [&_p]:text-light-950 [&_p]:dark:text-dark-950 [&_ul]:!text-xs"
+        className="prose dark:prose-invert prose-sm max-w-none overflow-y-auto [&_blockquote]:!text-xs [&_h1]:!text-lg [&_h2]:!text-base [&_h3]:!text-sm [&_ol]:!text-xs [&_p.is-empty::before]:text-light-500 [&_p.is-empty::before]:dark:text-dark-600 [&_p]:!text-sm [&_p]:text-light-950 [&_p]:dark:text-dark-950 [&_ul]:!text-xs"
       />
     </div>
   );
