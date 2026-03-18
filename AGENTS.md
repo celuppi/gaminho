@@ -11,6 +11,8 @@ Kan is an open-source project management tool (Trello alternative) built with:
 - **Auth**: Better Auth
 - **Internationalization**: Lingui
 
+> **Note**: This project is a fork of the original repository at [https://github.com/kanbn/kan](https://github.com/kanbn/kan).
+
 ## Setup Commands
 
 - Install deps: `pnpm install`

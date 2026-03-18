@@ -6,6 +6,7 @@ import CardUpdatedTemplate from "./templates/card-updated";
 import JoinWorkspaceTemplate from "./templates/join-workspace";
 import MagicLinkTemplate from "./templates/magic-link";
 import MentionTemplate from "./templates/mention";
+import NewCommentTemplate from "./templates/new-comment";
 import RemovedFromCardTemplate from "./templates/removed-from-card";
 import ResetPasswordTemplate from "./templates/reset-password";
 
@@ -14,6 +15,7 @@ type Templates =
   | "JOIN_WORKSPACE"
   | "RESET_PASSWORD"
   | "MENTION"
+  | "NEW_COMMENT"
   | "ADDED_TO_CARD"
   | "REMOVED_FROM_CARD"
   | "CARD_UPDATED";
@@ -23,6 +25,7 @@ const emailTemplates: Record<Templates, React.ComponentType<any>> = {
   JOIN_WORKSPACE: JoinWorkspaceTemplate,
   RESET_PASSWORD: ResetPasswordTemplate,
   MENTION: MentionTemplate,
+  NEW_COMMENT: NewCommentTemplate,
   ADDED_TO_CARD: AddedToCardTemplate,
   REMOVED_FROM_CARD: RemovedFromCardTemplate,
   CARD_UPDATED: CardUpdatedTemplate,

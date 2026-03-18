@@ -17,6 +17,7 @@ import {
   sendAddedToCardEmails,
   sendCardUpdatedEmails,
   sendMentionEmails,
+  sendNewCommentEmails,
   sendRemovedFromCardEmails,
 } from "../utils/notifications";
 import {
@@ -280,6 +281,15 @@ export const cardRouter = createTRPCRouter({
         commentId: newComment.id,
       }).catch((error) => {
         console.error("Failed to send mention emails:", error);
+      });
+
+      sendNewCommentEmails({
+        db: ctx.db,
+        cardPublicId: input.cardPublicId,
+        commentHtml: input.comment,
+        commenterUserId: userId,
+      }).catch((error) => {
+        console.error("Failed to send new comment emails:", error);
       });
 
       return newComment;

@@ -432,3 +432,100 @@ export async function sendCardUpdatedEmails({
     });
   }
 }
+
+/**
+ * Sends notification emails to all current members when a new comment is added
+ * Excludes the commenter and any members who were explicitly mentioned
+ */
+export async function sendNewCommentEmails({
+  db,
+  cardPublicId,
+  commenterUserId,
+  commentHtml,
+}: {
+  db: dbClient;
+  cardPublicId: string;
+  commenterUserId: string;
+  commentHtml: string;
+}) {
+  try {
+    const mentionPublicIds = parseMentionsFromHTML(commentHtml);
+
+    const card = await cardRepo.getWithListAndMembersByPublicId(db, cardPublicId);
+    if (!card?.list.board) return;
+
+    const activeMemberPublicIds = card.members
+      .filter((m) => m.deletedAt === null)
+      .map((m) => m.publicId);
+
+    const memberPublicIdsToNotify = activeMemberPublicIds.filter(
+      (publicId) => !mentionPublicIds.includes(publicId)
+    );
+
+    if (memberPublicIdsToNotify.length === 0) return;
+
+    const board = card.list.board;
+    const boardName = board.name;
+    const cardTitle = card.title;
+
+    const workspace = await workspaceRepo.getByPublicId(
+      db,
+      board.workspace.publicId,
+    );
+    if (!workspace?.id) return;
+    const workspaceId = workspace.id;
+
+    const commenter = await userRepo.getById(db, commenterUserId);
+    if (!commenter) return;
+    const commenterName = commenter.name ?? commenter.email;
+
+    const membersWithDetails = await memberRepo.getByPublicIdsWithUsers(
+      db,
+      memberPublicIdsToNotify,
+      workspaceId,
+    );
+
+    const membersToNotify = membersWithDetails.filter(
+      (member) => member.user?.id !== commenterUserId,
+    );
+
+    if (membersToNotify.length === 0) return;
+
+    const baseUrl = env("NEXT_PUBLIC_BASE_URL");
+    const cardUrl = `${baseUrl}/cards/${cardPublicId}`;
+
+    await Promise.all(
+      membersToNotify.map(async (member) => {
+        const userId = member.user?.id;
+        const email = member.user?.email ?? member.email;
+
+        if (!userId || !email) return;
+
+        try {
+          await sendEmail(
+            email,
+            `${commenterName} adicionou um novo comentário no cartão ${cardTitle}`,
+            "NEW_COMMENT",
+            {
+              commenterName,
+              boardName,
+              cardTitle,
+              cardUrl,
+            },
+          );
+        } catch (error) {
+          console.error("Failed to send new comment email:", {
+            email,
+            cardPublicId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }),
+    );
+  } catch (error) {
+    console.error("Error sending new comment emails:", {
+      cardPublicId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
