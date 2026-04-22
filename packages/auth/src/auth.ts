@@ -45,6 +45,12 @@ export const initAuth = (db: dbClient) => {
       },
     },
     socialProviders: configuredProviders,
+    account: {
+      accountLinking: {
+        enabled: true,
+        trustedProviders: ["microsoft"],
+      },
+    },
     user: {
       deleteUser: {
         enabled: true,
