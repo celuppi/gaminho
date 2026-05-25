@@ -73,7 +73,7 @@ export default function CardDropdown({
     {
       label: t`Copy card link`,
       action: handleCopyCardLink,
-      icon: <HiLink className="h-[16px] w-[16px] text-dark-900" />,
+      icon: <HiLink className="h-[16px] w-[16px] text-light-700 dark:text-dark-900" />,
     },
     ...(canEdit
       ? [
@@ -81,7 +81,7 @@ export default function CardDropdown({
             label: t`Add checklist`,
             action: () => openModal("ADD_CHECKLIST"),
             icon: (
-              <HiOutlineCheckCircle className="h-[16px] w-[16px] text-dark-900" />
+              <HiOutlineCheckCircle className="h-[16px] w-[16px] text-light-700 dark:text-dark-900" />
             ),
           },
         ]
@@ -92,7 +92,7 @@ export default function CardDropdown({
             label: t`Delete card`,
             action: () => openModal("DELETE_CARD"),
             icon: (
-              <HiOutlineTrash className="h-[16px] w-[16px] text-dark-900" />
+              <HiOutlineTrash className="h-[16px] w-[16px] text-light-700 dark:text-dark-900" />
             ),
           },
         ]
@@ -105,7 +105,7 @@ export default function CardDropdown({
 
   return (
     <Dropdown items={items}>
-      <HiEllipsisHorizontal className="h-5 w-5 text-dark-900" />
+      <HiEllipsisHorizontal className="h-5 w-5 text-light-700 dark:text-dark-900" />
     </Dropdown>
   );
 }

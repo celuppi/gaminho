@@ -5,6 +5,7 @@ import { t } from "@lingui/core/macro";
 import { PageHead } from "~/components/PageHead";
 import PatternedBackground from "~/components/PatternedBackground";
 import { api } from "~/utils/api";
+import { criticalityStyles } from "~/utils/criticality";
 
 export default function PublicBoardsView() {
   const router = useRouter();
@@ -79,15 +80,7 @@ export default function PublicBoardsView() {
                         title={`${count} ${crit}`}
                       >
                         <div
-                          className={`h-1.5 w-1.5 rounded-full ${
-                            crit === "Urgente"
-                              ? "bg-red-600"
-                              : crit === "Importante"
-                                ? "bg-red-400"
-                                : crit === "Média"
-                                  ? "bg-green-500"
-                                  : "bg-blue-500"
-                          }`}
+                          className={`h-1.5 w-1.5 rounded-full ${criticalityStyles[crit].dot}`}
                         />
                         <span className="text-[9px] font-medium text-neutral-500 dark:text-dark-800">
                           {count}

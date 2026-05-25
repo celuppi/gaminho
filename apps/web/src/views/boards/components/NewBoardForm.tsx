@@ -116,7 +116,7 @@ export function NewBoardForm({ isTemplate }: { isTemplate?: boolean }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="px-5 pt-5">
-        <div className="text-neutral-9000 flex w-full items-center justify-between pb-4 dark:text-dark-1000">
+        <div className="flex w-full items-center justify-between pb-4 text-neutral-900 dark:text-dark-1000">
           <h2 className="text-sm font-bold">{t`New ${isTemplate ? "template" : "board"}`}</h2>
           <button
             type="button"

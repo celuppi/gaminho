@@ -12,6 +12,7 @@ import Badge from "~/components/Badge";
 import CircularProgress from "~/components/CircularProgress";
 import LabelIcon from "~/components/LabelIcon";
 import { useLocalisation } from "~/hooks/useLocalisation";
+import { criticalityStyles } from "~/utils/criticality";
 import { getAvatarUrl } from "~/utils/helpers";
 
 const Card = ({
@@ -86,17 +87,10 @@ const Card = ({
             {criticality && (
               <Badge
                 value={criticality}
+                className={criticalityStyles[criticality].pill}
                 iconLeft={
                   <div
-                    className={`h-2 w-2 rounded-full ${
-                      criticality === "Urgente"
-                        ? "bg-red-600"
-                        : criticality === "Importante"
-                          ? "bg-red-400"
-                          : criticality === "Média"
-                            ? "bg-green-500"
-                            : "bg-blue-500"
-                    }`}
+                    className={`h-2 w-2 rounded-full ${criticalityStyles[criticality].dot}`}
                   />
                 }
               />

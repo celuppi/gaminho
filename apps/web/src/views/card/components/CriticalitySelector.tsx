@@ -5,6 +5,7 @@ import CheckboxDropdown from "~/components/CheckboxDropdown";
 import { usePopup } from "~/providers/popup";
 import { api } from "~/utils/api";
 import { invalidateCard } from "~/utils/cardInvalidation";
+import { criticalityStyles } from "~/utils/criticality";
 
 interface CriticalitySelectorProps {
   cardPublicId: string;
@@ -101,12 +102,15 @@ export function CriticalitySelector({
           handleSelect={(_groupKey, item) => handleSelect(item.key)}
         >
           <div
-            className={`flex h-full w-full items-center rounded-[5px] border-[1px] border-light-50 py-1 pl-2 text-left text-xs text-neutral-900 dark:border-dark-50 dark:text-dark-1000 ${
+            className={`flex h-full w-full items-center gap-x-2 rounded-[5px] border-[1px] border-light-50 py-1 pl-2 text-left text-xs text-neutral-900 dark:border-dark-50 dark:text-dark-1000 ${
               disabled
                 ? "cursor-not-allowed opacity-60"
                 : "hover:border-light-300 hover:bg-light-200 dark:hover:border-dark-200 dark:hover:bg-dark-100"
             }`}
           >
+            <div
+              className={`h-2 w-2 rounded-full ${criticalityStyles[currentCriticality].dot}`}
+            />
             <span className="font-semibold">{currentCriticality}</span>
           </div>
         </CheckboxDropdown>

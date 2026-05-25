@@ -195,7 +195,7 @@ export default function Dashboard({
             />
           </div>
 
-          <div className="relative h-full min-h-0 w-full overflow-hidden md:rounded-lg md:border md:border-light-300 md:bg-light-50 md:dark:border-dark-300 md:dark:bg-dark-50">
+          <div className="relative h-full min-h-0 w-full overflow-hidden md:rounded-lg md:border md:border-light-300 md:bg-light-100 md:dark:border-dark-300 md:dark:bg-dark-50">
             <div className="relative flex h-full min-h-0 w-full overflow-hidden">
               <div className="h-full w-full overflow-y-auto">{children}</div>
 

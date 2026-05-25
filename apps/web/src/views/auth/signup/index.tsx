@@ -78,7 +78,7 @@ export default function SignUpPage() {
                 </p>
               </div>
             ) : (
-              <div className="w-full rounded-lg border border-light-500 bg-light-300 px-4 py-10 dark:border-dark-400 dark:bg-dark-200 sm:max-w-md lg:px-10">
+              <div className="w-full rounded-lg border border-light-300 bg-light-50 px-4 py-10 shadow-sm dark:border-dark-400 dark:bg-dark-200 sm:max-w-md lg:px-10">
                 <div className="sm:mx-auto sm:w-full sm:max-w-sm">
                   <Auth setIsMagicLinkSent={handleMagicLinkSent} isSignUp />
                 </div>

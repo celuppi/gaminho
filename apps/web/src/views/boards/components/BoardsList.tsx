@@ -13,6 +13,7 @@ import { Tooltip } from "~/components/Tooltip";
 import { usePermissions } from "~/hooks/usePermissions";
 import { useModal } from "~/providers/modal";
 import { useWorkspace } from "~/providers/workspace";
+import { criticalityStyles } from "~/utils/criticality";
 import { api } from "~/utils/api";
 
 export function BoardsList({ isTemplate }: { isTemplate?: boolean }) {
@@ -158,15 +159,7 @@ export function BoardsList({ isTemplate }: { isTemplate?: boolean }) {
                           title={`${count} ${crit}`}
                         >
                           <div
-                            className={`h-2 w-2 rounded-full ${
-                              crit === "Urgente"
-                                ? "bg-red-600"
-                                : crit === "Importante"
-                                  ? "bg-red-400"
-                                  : crit === "Média"
-                                    ? "bg-green-500"
-                                    : "bg-blue-500"
-                            }`}
+                            className={`h-2 w-2 rounded-full ${criticalityStyles[crit].dot}`}
                           />
                           <span className="text-[10px] font-medium text-neutral-500 dark:text-dark-800">
                             {count}

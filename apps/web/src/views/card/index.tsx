@@ -360,7 +360,7 @@ export default function CardPage({ isTemplate }: { isTemplate?: boolean }) {
       <PageHead
         title={t`${card?.title ?? t`Card`} | ${board?.name ?? t`Board`}`}
       />
-      <div className="flex h-full flex-1 flex-col overflow-hidden">
+      <div className="flex h-full flex-1 flex-col overflow-hidden bg-light-50 dark:bg-dark-50">
         {/* Full-width top strip with board link and dropdown */}
         <div className="flex w-full items-center justify-between border-b-[1px] border-light-300 bg-light-50 px-8 py-2 dark:border-dark-300 dark:bg-dark-50">
           {!card && isLoading && (
@@ -430,7 +430,7 @@ export default function CardPage({ isTemplate }: { isTemplate?: boolean }) {
                         onBlur={canEdit ? handleSubmit(onSubmit) : undefined}
                         rows={1}
                         disabled={!canEdit}
-                        className={`block w-full resize-none overflow-hidden border-0 bg-transparent p-0 py-0 font-bold leading-relaxed text-neutral-900 focus:ring-0 dark:text-dark-1000 sm:text-[1.2rem] ${!canEdit ? "cursor-default" : ""}`}
+                        className={`-mx-2 block w-full resize-none overflow-hidden rounded-md border-0 bg-transparent px-2 py-1 font-bold leading-relaxed text-neutral-900 dark:text-dark-1000 sm:text-[1.5rem] ${canEdit ? "transition-colors hover:bg-light-100 focus:bg-light-100 focus:ring-2 focus:ring-inset focus:ring-light-400 dark:hover:bg-dark-100 dark:focus:bg-dark-100 dark:focus:ring-dark-400" : "cursor-default focus:ring-0"}`}
                         onInput={(e) => {
                           const target = e.target as HTMLTextAreaElement;
                           target.style.height = "auto";
@@ -448,12 +448,15 @@ export default function CardPage({ isTemplate }: { isTemplate?: boolean }) {
               </div>
               {card && (
                 <>
+                  <div className="mb-8 border-t border-light-300 dark:border-dark-300" />
                   <div className="mb-10 flex w-full max-w-2xl flex-col justify-between">
                     <form
                       onSubmit={handleSubmit(onSubmit)}
                       className="w-full space-y-6"
                     >
-                      <div className="mt-2">
+                      <div
+                        className={`-mx-2 mt-2 rounded-md px-2 ${canEdit ? "transition-colors hover:bg-light-100 focus-within:bg-light-100 focus-within:ring-2 focus-within:ring-inset focus-within:ring-light-400 dark:hover:bg-dark-100 dark:focus-within:bg-dark-100 dark:focus-within:ring-dark-400" : ""}`}
+                      >
                         <Editor
                           content={card.description}
                           onChange={

@@ -123,7 +123,7 @@ export default function List({
                   disabled={!canCreateCard}
                 >
                   <HiOutlinePlusSmall
-                    className="h-5 w-5 text-dark-900"
+                    className="h-5 w-5 text-light-700 dark:text-dark-900"
                     aria-hidden="true"
                   />
                 </button>
@@ -136,7 +136,7 @@ export default function List({
                           label: t`Add a card`,
                           action: () => openNewCardForm(list.publicId),
                           icon: (
-                            <HiOutlineSquaresPlus className="h-[18px] w-[18px] text-dark-900" />
+                            <HiOutlineSquaresPlus className="h-[18px] w-[18px] text-light-700 dark:text-dark-900" />
                           ),
                         },
                       ]
@@ -147,7 +147,7 @@ export default function List({
                           label: t`Delete list`,
                           action: handleOpenDeleteListConfirmation,
                           icon: (
-                            <HiOutlineTrash className="h-[18px] w-[18px] text-dark-900" />
+                            <HiOutlineTrash className="h-[18px] w-[18px] text-light-700 dark:text-dark-900" />
                           ),
                         },
                       ]
@@ -161,7 +161,7 @@ export default function List({
                 return (
                   <div className="relative mr-1 inline-block">
                     <Dropdown items={dropdownItems}>
-                      <HiEllipsisHorizontal className="h-5 w-5 text-dark-900" />
+                      <HiEllipsisHorizontal className="h-5 w-5 text-light-700 dark:text-dark-900" />
                     </Dropdown>
                   </div>
                 );

@@ -256,7 +256,7 @@ export default function MembersPage() {
   return (
     <>
       <PageHead title={t`Members | ${workspace.name ?? t`Workspace`}`} />
-      <div className="m-auto h-full max-w-[1100px] p-6 px-5 md:px-28 md:py-12">
+      <div className="m-auto my-6 max-w-[1100px] rounded-lg border border-light-300 bg-light-50 p-6 px-5 dark:border-dark-300 dark:bg-dark-50 md:px-28 md:py-12">
         <div className="mb-8 flex w-full justify-between">
           <div className="flex items-center gap-3">
             <h1 className="font-bold tracking-tight text-neutral-900 dark:text-dark-1000 sm:text-[1.2rem]">

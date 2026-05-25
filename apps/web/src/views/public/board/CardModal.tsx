@@ -9,6 +9,7 @@ import LabelIcon from "~/components/LabelIcon";
 import { useModal } from "~/providers/modal";
 import { usePopup } from "~/providers/popup";
 import { api } from "~/utils/api";
+import { type Criticality, criticalityStyles } from "~/utils/criticality";
 import ActivityList from "~/views/card/components/ActivityList";
 import { AttachmentThumbnails } from "~/views/card/components/AttachmentThumbnails";
 import Checklists from "~/views/card/components/Checklists";
@@ -139,24 +140,13 @@ export function CardModal({
               <div className="mt-2 flex flex-wrap gap-1">
                 {data?.criticality && (
                   <Badge
-                    value={
-                      data.criticality as
-                        | "Urgente"
-                        | "Importante"
-                        | "Média"
-                        | "Baixa"
+                    value={data.criticality as Criticality}
+                    className={
+                      criticalityStyles[data.criticality as Criticality].pill
                     }
                     iconLeft={
                       <div
-                        className={`h-2 w-2 rounded-full ${
-                          data.criticality === "Urgente"
-                            ? "bg-red-600"
-                            : data.criticality === "Importante"
-                              ? "bg-red-400"
-                              : data.criticality === "Média"
-                                ? "bg-green-500"
-                                : "bg-blue-500"
-                        }`}
+                        className={`h-2 w-2 rounded-full ${criticalityStyles[data.criticality as Criticality].dot}`}
                       />
                     }
                   />

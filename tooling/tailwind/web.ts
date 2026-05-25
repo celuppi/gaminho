@@ -1,9 +1,10 @@
 import type { Config } from "tailwindcss";
 import forms from "@tailwindcss/forms";
+import colors from "tailwindcss/colors";
 import scrollbar from "tailwind-scrollbar";
 
 export default {
-  content: ["./src/**/*.tsx"],
+  content: ["./src/**/*.{ts,tsx}"],
   darkMode: "class",
   theme: {
     extend: {
@@ -70,8 +71,8 @@ export default {
         "dark-900": "#f1f5f9",
         "dark-950": "#f8fafc",
         "dark-1000": "#ffffff",
-        "light-50": "#f8fafc",
-        "light-100": "#f1f5f9",
+        "light-50": "#ffffff",
+        "light-100": "#eceef2",
         "light-200": "#e2e8f0",
         "light-300": "#cbd5e1",
         "light-400": "#94a3b8",
@@ -81,7 +82,10 @@ export default {
         "light-800": "#1e293b",
         "light-900": "#0f172a",
         "light-950": "#020617",
-        "light-1000": "#000000",
+        "light-1000": "#0f172a",
+        // Soften pure-black text to slate-800 (corporate soft) while keeping
+        // other neutral shades intact.
+        neutral: { ...colors.neutral, 900: "#1e293b" },
         "brand-50": "#eef2ff",
         "brand-100": "#e0e7ff",
         "brand-200": "#c7d2fe",

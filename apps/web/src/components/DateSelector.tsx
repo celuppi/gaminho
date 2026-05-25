@@ -14,32 +14,35 @@ import { useMemo, useState } from "react";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi2";
 import { twMerge } from "tailwind-merge";
 
+import { useLocalisation } from "~/hooks/useLocalisation";
+
 interface DateSelectorProps {
   selectedDate?: Date | null;
   onDateSelect?: (date: Date | undefined) => void;
 }
 
 const DateSelector = ({ selectedDate, onDateSelect }: DateSelectorProps) => {
+  const { dateLocale } = useLocalisation();
   const [currentMonth, setCurrentMonth] = useState(() => {
     return selectedDate ? startOfMonth(selectedDate) : startOfMonth(new Date());
   });
 
-  const monthName = format(currentMonth, "MMMM");
+  const monthName = format(currentMonth, "MMMM", { locale: dateLocale });
   const year = format(currentMonth, "yyyy");
 
   const dayHeaders = useMemo(() => {
-    const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 }); // Monday
+    const weekStart = startOfWeek(new Date(), { weekStartsOn: 0 }); // Sunday
     return eachDayOfInterval({
       start: weekStart,
       end: new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000),
-    }).map((date) => format(date, "EEEEEE")); // Shortest localized day name
-  }, []);
+    }).map((date) => format(date, "EEEEEE", { locale: dateLocale })); // Shortest localized day name
+  }, [dateLocale]);
 
   const days = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
-    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 }); // Monday
-    const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 }); // Monday
+    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 }); // Sunday
+    const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 }); // Sunday
 
     return eachDayOfInterval({ start: calendarStart, end: calendarEnd }).map(
       (date) => {
