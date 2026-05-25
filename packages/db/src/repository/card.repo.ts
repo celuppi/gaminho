@@ -894,9 +894,34 @@ export const softDelete = async (
       .having(gt(countExpr, 1));
 
     if (duplicateIndices.length > 0) {
-      throw new Error(
-        `Duplicate indices found after soft deleting ${result.id}`,
-      );
+      // Pre-existing duplicate indices in this list (e.g. from a prior bulk
+      // create race) would otherwise abort every delete in the list. Self-heal
+      // by compacting to contiguous indices, then verify — matching the
+      // create/bulkCreate path above.
+      await tx.execute(sql`
+        WITH ordered AS (
+          SELECT id, ROW_NUMBER() OVER (ORDER BY "index", id) - 1 AS new_index
+          FROM "card"
+          WHERE "listId" = ${result.listId} AND "deletedAt" IS NULL
+        )
+        UPDATE "card" c
+        SET "index" = o.new_index
+        FROM ordered o
+        WHERE c.id = o.id;
+      `);
+
+      const postFixDupes = await tx
+        .select({ index: cards.index, count: countExpr })
+        .from(cards)
+        .where(and(eq(cards.listId, result.listId), isNull(cards.deletedAt)))
+        .groupBy(cards.listId, cards.index)
+        .having(gt(countExpr, 1));
+
+      if (postFixDupes.length > 0) {
+        throw new Error(
+          `Invariant violation: duplicate card indices remain after compaction in list ${result.listId}`,
+        );
+      }
     }
 
     return result;
