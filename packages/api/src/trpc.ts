@@ -38,6 +38,11 @@ const createAuthWithHeaders = (
           headers,
           query: { referenceId: input.workspacePublicId },
         }),
+      setPassword: (input: { newPassword: string }) =>
+        auth.api.setPassword({
+          headers,
+          body: { newPassword: input.newPassword },
+        }),
     },
   };
 };
@@ -118,9 +123,7 @@ export const createTRPCRouter = t.router;
 
 export const createCallerFactory = t.createCallerFactory;
 
-export const publicProcedure = t.procedure.meta({
-  openapi: { method: "GET", path: "/public" },
-});
+export const publicProcedure = t.procedure;
 
 const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
   if (!ctx.user) {
@@ -142,12 +145,7 @@ const enforceUserIsAdmin = t.middleware(async ({ ctx, next }) => {
   });
 });
 
-export const protectedProcedure = t.procedure.use(enforceUserIsAuthed).meta({
-  openapi: {
-    method: "GET",
-    path: "/protected",
-  },
-});
+export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
 
 export const adminProtectedProcedure = t.procedure
   .use(enforceUserIsAdmin)

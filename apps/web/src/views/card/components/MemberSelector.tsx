@@ -58,7 +58,7 @@ export default function MemberSelector({
               (m) => m.publicId === workspaceMemberPublicId,
             );
             if (workspaceMember) {
-              newMembers.push(workspaceMember);
+              newMembers.push({ ...workspaceMember, deletedAt: null });
             }
           }
 

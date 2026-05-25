@@ -470,7 +470,7 @@ export default function Editor({
         StarterKit.configure({
           heading: disableHeadings ? false : undefined,
         }),
-        Markdown,
+        Markdown.configure({ transformPastedText: true }),
         Placeholder.configure({
           placeholder: readOnly
             ? ""

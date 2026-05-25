@@ -86,41 +86,47 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     if (storedWorkspaceId !== null) {
-      const newData = data;
-      const selectedWorkspace = newData.find(
+      const selectedWorkspace = data.find(
         ({ workspace }) => workspace.publicId === storedWorkspaceId,
       );
 
-      if (!selectedWorkspace?.workspace) return;
+      if (selectedWorkspace?.workspace) {
+        setWorkspace({
+          publicId: selectedWorkspace.workspace.publicId,
+          name: selectedWorkspace.workspace.name,
+          slug: selectedWorkspace.workspace.slug,
+          plan: selectedWorkspace.workspace.plan,
+          description: selectedWorkspace.workspace.description,
+          role: selectedWorkspace.role,
+        });
 
-      setWorkspace({
-        publicId: selectedWorkspace.workspace.publicId,
-        name: selectedWorkspace.workspace.name,
-        slug: selectedWorkspace.workspace.slug,
-        plan: selectedWorkspace.workspace.plan,
-        description: selectedWorkspace.workspace.description,
-        role: selectedWorkspace.role,
-      });
+        if (workspacePublicId) {
+          router.push(`/boards`);
+          localStorage.setItem("workspacePublicId", workspacePublicId);
+        }
 
-      if (workspacePublicId) {
-        router.push(`/boards`);
-        localStorage.setItem("workspacePublicId", workspacePublicId);
+        setHasLoaded(true);
+        return;
       }
-    } else {
-      const primaryWorkspace = data[0]?.workspace;
-      const primaryWorkspaceRole = data[0]?.role;
 
-      if (!primaryWorkspace || !primaryWorkspaceRole) return;
-      localStorage.setItem("workspacePublicId", primaryWorkspace.publicId);
-      setWorkspace({
-        publicId: primaryWorkspace.publicId,
-        name: primaryWorkspace.name,
-        slug: primaryWorkspace.slug,
-        plan: primaryWorkspace.plan,
-        description: primaryWorkspace.description,
-        role: primaryWorkspaceRole,
-      });
+      // Stored workspace id is stale — clear it and fall through to primary
+      localStorage.removeItem("workspacePublicId");
     }
+
+    const primaryWorkspace = data[0]?.workspace;
+    const primaryWorkspaceRole = data[0]?.role;
+
+    if (!primaryWorkspace || !primaryWorkspaceRole) return;
+    localStorage.setItem("workspacePublicId", primaryWorkspace.publicId);
+    setWorkspace({
+      publicId: primaryWorkspace.publicId,
+      name: primaryWorkspace.name,
+      slug: primaryWorkspace.slug,
+      plan: primaryWorkspace.plan,
+      description: primaryWorkspace.description,
+      role: primaryWorkspaceRole,
+    });
+    setHasLoaded(true);
   }, [data, isLoading, workspacePublicId, router]);
 
   return (
