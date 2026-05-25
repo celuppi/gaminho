@@ -333,12 +333,10 @@ const ACTIVITIES_PAGE_SIZE = 20;
 const ActivityList = ({
   cardPublicId,
   isLoading: cardIsLoading,
-  isAdmin,
   isViewOnly,
 }: {
   cardPublicId: string;
   isLoading: boolean;
-  isAdmin?: boolean;
   isViewOnly?: boolean;
 }) => {
   const { dateLocale, locale } = useLocalisation();
@@ -490,7 +488,6 @@ const ActivityList = ({
               comment={activity.comment?.comment}
               isEdited={!!activity.comment?.updatedAt}
               isAuthor={activity.comment?.createdBy === sessionData?.user.id}
-              isAdmin={isAdmin ?? false}
               isViewOnly={!!isViewOnly}
             />
           );

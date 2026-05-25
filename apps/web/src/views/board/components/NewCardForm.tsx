@@ -144,24 +144,26 @@ export function NewCardForm({
             const newCard = {
               publicId: `PLACEHOLDER_${generateUID()}`,
               title: args.title,
-              listId: 2,
+              listId: list.cards[0]?.listId ?? 0,
               description: "",
+              createdBy: null,
               dueDate: args.dueDate ?? null,
               criticality: args.criticality ?? "Média",
               labels: oldBoard.labels.filter((label) =>
                 args.labelPublicIds.includes(label.publicId),
               ),
-              members:
-                oldBoard.workspace.members
-                  .filter((member) =>
-                    args.memberPublicIds.includes(member.publicId),
-                  )
-                  .map((member) => ({
-                    ...member,
-                    deletedAt: null,
-                  })) ?? [],
-              _filteredLabels: labelPublicIds.map((id) => ({ publicId: id })),
-              _filteredMembers: memberPublicIds.map((id) => ({ publicId: id })),
+              area: null,
+              members: oldBoard.workspace.members
+                .filter((member) =>
+                  args.memberPublicIds.includes(member.publicId),
+                )
+                .map((member) => ({
+                  ...member,
+                  deletedAt: null,
+                })),
+              attachments: [],
+              checklists: [],
+              comments: [],
               index: position === "start" ? 0 : list.cards.length,
             };
 
