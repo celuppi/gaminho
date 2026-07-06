@@ -92,9 +92,9 @@ function EmaChatWidget({
           <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
             {messages.length === 0 && (
               <p className="text-sm text-neutral-500 dark:text-dark-900">
-                Pergunte sobre suas tarefas — por exemplo: "quais são minhas
-                tarefas atrasadas?" ou, com um card aberto, "o que é essa
-                tarefa?".
+                Pergunte sobre suas tarefas — por exemplo: “quais são minhas
+                tarefas atrasadas?” ou, com um card aberto, “o que é essa
+                tarefa?”.
               </p>
             )}
             {messages.map((m, i) =>
