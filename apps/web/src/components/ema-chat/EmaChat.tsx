@@ -108,7 +108,7 @@ function EmaChatWidget({
               ) : (
                 <div
                   key={i}
-                  className="mr-4 max-w-none text-sm text-neutral-900 dark:text-dark-1000"
+                  className="prose prose-sm dark:prose-invert mr-4 max-w-none text-sm text-neutral-900 dark:text-dark-1000"
                 >
                   <ReactMarkdown>
                     {stripSuggestions(m.content) ||
