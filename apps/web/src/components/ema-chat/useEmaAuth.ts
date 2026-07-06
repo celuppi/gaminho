@@ -7,22 +7,10 @@
 import type { AccountInfo } from "@azure/msal-browser";
 import { useCallback, useRef, useState } from "react";
 import { PublicClientApplication } from "@azure/msal-browser";
-import { env } from "next-runtime-env";
 
-export interface EmaEnv {
-  apiUrl: string;
-  clientId: string;
-  tenantId: string;
-}
+import type { EmaEnv } from "./emaEnv";
 
-/** Envs do widget. null = widget desabilitado (fail-soft, não renderiza). */
-export function getEmaEnv(): EmaEnv | null {
-  const apiUrl = env("NEXT_PUBLIC_EMA_API_URL");
-  const clientId = env("NEXT_PUBLIC_EMA_AAD_CLIENT_ID");
-  const tenantId = env("NEXT_PUBLIC_EMA_AAD_TENANT_ID");
-  if (!apiUrl || !clientId || !tenantId) return null;
-  return { apiUrl: apiUrl.replace(/\/+$/, ""), clientId, tenantId };
-}
+import { getEmaEnv } from "./emaEnv";
 
 const SCOPES = ["User.Read"];
 
@@ -76,7 +64,14 @@ export function useEmaAuth(loginHint?: string | null) {
           throw initErr;
         }
 
-        let account = accountRef.current ?? msal.getAllAccounts()[0] ?? null;
+        let account =
+          accountRef.current ??
+          msal
+            .getAllAccounts()
+            .find(
+              (a) => a.username.toLowerCase() === (loginHint ?? "").toLowerCase(),
+            ) ??
+          null;
         if (!account) {
           const sso = await msal.ssoSilent({
             scopes: SCOPES,

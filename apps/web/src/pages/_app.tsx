@@ -12,7 +12,7 @@ import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 import { useEffect } from "react";
 
-import { EmaChat } from "~/components/ema-chat/EmaChat";
+import { EmaChatLoader } from "~/components/ema-chat/EmaChatLoader";
 import { KeyboardShortcutProvider } from "~/providers/keyboard-shortcuts";
 import { LinguiProviderWrapper } from "~/providers/lingui";
 import { ModalProvider } from "~/providers/modal";
@@ -90,12 +90,12 @@ const MyApp: AppType = ({ Component, pageProps }: AppPropsWithLayout) => {
                   {posthogKey ? (
                     <PostHogProvider client={posthog}>
                       {getLayout(<Component {...pageProps} />)}
-                      <EmaChat />
+                      <EmaChatLoader />
                     </PostHogProvider>
                   ) : (
                     <>
                       {getLayout(<Component {...pageProps} />)}
-                      <EmaChat />
+                      <EmaChatLoader />
                     </>
                   )}
                 </PopupProvider>

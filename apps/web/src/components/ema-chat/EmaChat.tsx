@@ -5,12 +5,10 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 
-import type { EmaEnv } from "./useEmaAuth";
-
-import { authClient } from "@kan/auth/client";
+import type { EmaEnv } from "./emaEnv";
 
 import { buildPageContext } from "./pageContext";
-import { getEmaEnv, useEmaAuth } from "./useEmaAuth";
+import { useEmaAuth } from "./useEmaAuth";
 import { useEmaChat } from "./useEmaChat";
 
 /** Remove a tag <suggestions> que a EMA anexa para o app dela. */
@@ -18,14 +16,7 @@ function stripSuggestions(content: string): string {
   return content.replace(/<suggestions>[\s\S]*?<\/suggestions>/g, "").trim();
 }
 
-export function EmaChat() {
-  const { data: session } = authClient.useSession();
-  const cfg = getEmaEnv();
-  if (!session?.user || !cfg) return null;
-  return <EmaChatWidget cfg={cfg} loginHint={session.user.email} />;
-}
-
-function EmaChatWidget({
+export default function EmaChatWidget({
   cfg,
   loginHint,
 }: {
