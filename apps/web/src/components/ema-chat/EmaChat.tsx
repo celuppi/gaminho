@@ -2,7 +2,7 @@
 // Auto-contido: não renderiza sem sessão Better Auth ou sem as envs
 // NEXT_PUBLIC_EMA_* (fail-soft). Contexto de tela vai em cada mensagem.
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 
 import type { EmaEnv } from "./emaEnv";
@@ -16,6 +16,20 @@ function stripSuggestions(content: string): string {
   return content.replace(/<suggestions>[\s\S]*?<\/suggestions>/g, "").trim();
 }
 
+const MSG_ENTRAR = "Para falar com a EMA, entre com sua conta Microsoft.";
+const MSG_POPUP_BLOQUEADO =
+  "O navegador bloqueou a janela de login — permita popups para este site e tente de novo.";
+const MSG_LOGIN_FALHOU =
+  "Não consegui completar o login. Tente de novo em instantes.";
+
+/** MSAL sinaliza popup bloqueado/fechado via errorCode do BrowserAuthError. */
+function isPopupBlocked(err: unknown): boolean {
+  if (typeof err !== "object" || err === null || !("errorCode" in err))
+    return false;
+  const code = (err as { errorCode: unknown }).errorCode;
+  return code === "popup_window_error" || code === "empty_window_error";
+}
+
 export default function EmaChatWidget({
   cfg,
   loginHint,
@@ -25,9 +39,17 @@ export default function EmaChatWidget({
 }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
   const router = useRouter();
-  const { getToken } = useEmaAuth(loginHint);
+  const { status, getToken, loginWithPopup, warmUp } = useEmaAuth(loginHint);
   const { messages, busy, error, send, reset } = useEmaChat();
+
+  // Aquecimento ao abrir o painel: resolve o initialize() do MSAL e tenta o
+  // caminho silencioso — assim o clique em "Entrar com Microsoft" (se
+  // necessário) abre o popup sem awaits pesados no meio do gesto.
+  useEffect(() => {
+    if (open) void warmUp();
+  }, [open, warmUp]);
 
   const handleSend = async () => {
     const message = input.trim();
@@ -38,7 +60,25 @@ export default function EmaChatWidget({
       router.pathname,
       router.query,
     );
-    await send({ message, pageContext, getToken, apiUrl: cfg.apiUrl });
+    const outcome = await send({
+      message,
+      pageContext,
+      getToken,
+      apiUrl: cfg.apiUrl,
+    });
+    // Precisa de login interativo: devolve o texto ao input — o aviso com o
+    // botão "Entrar com Microsoft" já está visível (status = needs_login).
+    if (outcome === "auth") setInput(message);
+  };
+
+  // Chamado DIRETO do onClick: o popup precisa carregar o gesto do usuário
+  // (Safari bloqueia popups abertos depois de awaits longos).
+  const handleLogin = () => {
+    setLoginError(null);
+    loginWithPopup().catch((err: unknown) => {
+      console.error("[ema-chat] login interativo falhou:", err);
+      setLoginError(isPopupBlocked(err) ? MSG_POPUP_BLOQUEADO : MSG_LOGIN_FALHOU);
+    });
   };
 
   return (
@@ -107,6 +147,23 @@ export default function EmaChatWidget({
                   </ReactMarkdown>
                 </div>
               ),
+            )}
+            {status === "needs_login" && (
+              <div className="rounded-lg bg-violet-600/10 px-3 py-2 text-sm text-neutral-900 dark:text-dark-1000">
+                <p>{MSG_ENTRAR}</p>
+                <button
+                  type="button"
+                  onClick={handleLogin}
+                  className="mt-2 w-full rounded-lg bg-violet-600 px-3 py-2 text-sm font-medium text-white hover:bg-violet-700"
+                >
+                  Entrar com Microsoft
+                </button>
+                {loginError && (
+                  <p className="mt-2 text-red-600 dark:text-red-400">
+                    {loginError}
+                  </p>
+                )}
+              </div>
             )}
             {error && (
               <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400">
