@@ -7,10 +7,17 @@ export interface EmaMessage {
   content: string;
 }
 
+/**
+ * "ok" = enviado; "auth" = precisa de login interativo (o painel mostra o
+ * botão "Entrar com Microsoft" e devolve o texto ao input); "error" = falha
+ * de rede/EMA (mensagem amigável em `error`).
+ */
+export type SendOutcome = "ok" | "auth" | "error";
+
 export interface SendArgs {
   message: string;
   pageContext: string;
-  getToken: (interactive?: boolean) => Promise<string>;
+  getToken: () => Promise<string>;
   apiUrl: string;
 }
 
@@ -46,16 +53,33 @@ export function useEmaChat() {
   }, []);
 
   const send = useCallback(
-    async ({ message, pageContext, getToken, apiUrl }: SendArgs) => {
+    async ({
+      message,
+      pageContext,
+      getToken,
+      apiUrl,
+    }: SendArgs): Promise<SendOutcome> => {
       setBusy(true);
       setError(null);
+
+      // Token ANTES de renderizar a mensagem: se precisar de login
+      // interativo, o painel devolve o texto ao input em vez de deixar uma
+      // pergunta órfã no histórico.
+      let token: string;
+      try {
+        token = await getToken();
+      } catch (err) {
+        console.error("[ema-chat] autenticação silenciosa falhou:", err);
+        setBusy(false);
+        return "auth";
+      }
+
       setMessages((m) => [
         ...m,
         { role: "user", content: message },
         { role: "assistant", content: "" },
       ]);
       try {
-        const token = await getToken(true);
         const authHeaders = {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -114,9 +138,12 @@ export function useEmaChat() {
             // type === "done": o conteúdo final já foi acumulado via chunks
           }
         }
+        return "ok";
       } catch (err) {
+        console.error("[ema-chat] falha ao falar com a EMA:", err);
         const msg = err instanceof Error ? err.message : String(err);
         setError(msg === "SEM_ACESSO" ? MSG_SEM_ACESSO : MSG_ERRO_GENERICO);
+        return "error";
       } finally {
         setBusy(false);
       }
