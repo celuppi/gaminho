@@ -89,6 +89,9 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.812.0
         version: 3.879.0
+      '@azure/msal-browser':
+        specifier: ^5.16.0
+        version: 5.16.0
       '@headlessui/react':
         specifier: ^2.2.0
         version: 2.2.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -848,6 +851,14 @@ packages:
   '@aws-sdk/xml-builder@3.873.0':
     resolution: {integrity: sha512-kLO7k7cGJ6KaHiExSJWojZurF7SnGMDHXRuQunFnEoD0n1yB6Lqy/S/zHiQ7oJnBhPr9q0TW9qFkrsZb1Uc54w==}
     engines: {node: '>=18.0.0'}
+
+  '@azure/msal-browser@5.16.0':
+    resolution: {integrity: sha512-Wc75FGnQgYpsm5jsOqn1H8AXsh8vXruA6vwip1nhjrJxwby7juxKAIVLr7csepmHiwdZGr6EwI5BlSc3PizEtQ==}
+    engines: {node: '>=0.8.0'}
+
+  '@azure/msal-common@16.11.0':
+    resolution: {integrity: sha512-UikJOtMwkFpZNzTH6Dqk8UTUPbow15zH3e0UjGYZy69lYENW/S05gMLhbxI2eonz66uALhIljvhsSMEb6+O30g==}
+    engines: {node: '>=0.8.0'}
 
   '@babel/code-frame@7.27.1':
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}
@@ -9591,6 +9602,7 @@ packages:
 
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   v8-compile-cache-lib@3.0.1:
@@ -10485,6 +10497,12 @@ snapshots:
     dependencies:
       '@smithy/types': 4.3.2
       tslib: 2.8.1
+
+  '@azure/msal-browser@5.16.0':
+    dependencies:
+      '@azure/msal-common': 16.11.0
+
+  '@azure/msal-common@16.11.0': {}
 
   '@babel/code-frame@7.27.1':
     dependencies:
