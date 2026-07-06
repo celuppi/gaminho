@@ -48,8 +48,7 @@ export type EmaAuthStatus =
   | "idle"
   | "authenticating"
   | "ready"
-  | "needs_login"
-  | "error";
+  | "needs_login";
 
 export function useEmaAuth(loginHint?: string | null) {
   const [status, setStatus] = useState<EmaAuthStatus>("idle");
@@ -64,10 +63,19 @@ export function useEmaAuth(loginHint?: string | null) {
     async (interactive = false): Promise<string> => {
       const cfg = getEmaEnv();
       if (!cfg) throw new Error("Widget da EMA sem configuração.");
-      const msal = getMsal(cfg);
-      await msalInit;
       setStatus("authenticating");
       try {
+        const msal = getMsal(cfg);
+        try {
+          await msalInit;
+        } catch (initErr) {
+          // Init falhou: zera os singletons para permitir retry na próxima
+          // chamada (senão a promise rejeitada fica cacheada para sempre).
+          msalInstance = null;
+          msalInit = null;
+          throw initErr;
+        }
+
         let account = accountRef.current ?? msal.getAllAccounts()[0] ?? null;
         if (!account) {
           const sso = await msal.ssoSilent({
@@ -78,7 +86,7 @@ export function useEmaAuth(loginHint?: string | null) {
         }
         const result = await msal.acquireTokenSilent({
           scopes: SCOPES,
-          account: account!,
+          account,
         });
         accountRef.current = result.account;
         setStatus("ready");
@@ -86,7 +94,9 @@ export function useEmaAuth(loginHint?: string | null) {
       } catch (err) {
         if (interactive) {
           try {
-            const result = await msal.loginPopup({
+            const msalRetry = getMsal(cfg);
+            await msalInit;
+            const result = await msalRetry.loginPopup({
               scopes: SCOPES,
               loginHint: loginHint ?? undefined,
             });
