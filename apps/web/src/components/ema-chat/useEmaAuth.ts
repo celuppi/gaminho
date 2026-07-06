@@ -118,6 +118,12 @@ export function useEmaAuth(loginHint?: string | null) {
     const result = await msal.loginPopup({
       scopes: SCOPES,
       loginHint: loginHint ?? undefined,
+      // Um popup interrompido (janela perdida em outra aba, reload no meio
+      // do fluxo) deixa a flag interaction.status presa no sessionStorage e
+      // todo clique seguinte morre com interaction_in_progress. Este botão
+      // é o ÚNICO ponto interativo do widget, então assumir o controle da
+      // interação órfã é seguro.
+      overrideInteractionInProgress: true,
     });
     accountRef.current = result.account;
     setStatus("ready");

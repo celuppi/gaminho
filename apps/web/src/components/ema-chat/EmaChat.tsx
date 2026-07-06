@@ -40,6 +40,7 @@ export default function EmaChatWidget({
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [loggingIn, setLoggingIn] = useState(false);
   const router = useRouter();
   const { status, getToken, loginWithPopup, warmUp } = useEmaAuth(loginHint);
   const { messages, busy, error, send, reset } = useEmaChat();
@@ -78,10 +79,15 @@ export default function EmaChatWidget({
   // (Safari bloqueia popups abertos depois de awaits longos).
   const handleLogin = () => {
     setLoginError(null);
-    loginWithPopup().catch((err: unknown) => {
-      console.error("[ema-chat] login interativo falhou:", err);
-      setLoginError(isPopupBlocked(err) ? MSG_POPUP_BLOQUEADO : MSG_LOGIN_FALHOU);
-    });
+    setLoggingIn(true);
+    loginWithPopup()
+      .catch((err: unknown) => {
+        console.error("[ema-chat] login interativo falhou:", err);
+        setLoginError(
+          isPopupBlocked(err) ? MSG_POPUP_BLOQUEADO : MSG_LOGIN_FALHOU,
+        );
+      })
+      .finally(() => setLoggingIn(false));
   };
 
   return (
@@ -156,10 +162,13 @@ export default function EmaChatWidget({
                 <p>{MSG_ENTRAR}</p>
                 <button
                   type="button"
+                  disabled={loggingIn}
                   onClick={handleLogin}
-                  className="mt-2 w-full rounded-lg bg-violet-600 px-3 py-2 text-sm font-medium text-white hover:bg-violet-700"
+                  className="mt-2 w-full rounded-lg bg-violet-600 px-3 py-2 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-50"
                 >
-                  Entrar com Microsoft
+                  {loggingIn
+                    ? "Abrindo janela de login…"
+                    : "Entrar com Microsoft"}
                 </button>
                 {loginError && (
                   <p className="mt-2 text-red-600 dark:text-red-400">
