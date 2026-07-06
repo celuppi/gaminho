@@ -30,7 +30,16 @@ function getMsal(cfg: EmaEnv): PublicClientApplication {
         authority: `https://login.microsoftonline.com/${cfg.tenantId}`,
         redirectUri: window.location.origin,
       },
-      cache: { cacheLocation: "sessionStorage" },
+      // localStorage: o login via popup vale para TODAS as abas e sobrevive
+      // a reloads — com sessionStorage (por aba no Safari) o usuário teria
+      // que logar de novo a cada aba, mesmo com refresh token válido (~24h).
+      cache: { cacheLocation: "localStorage" },
+      system: {
+        // Safari/ITP nunca completa o iframe do ssoSilent (timed_out) — o
+        // default de 10s deixa o painel parecendo travado antes do botão
+        // "Entrar com Microsoft" aparecer. 4s cobre o caso feliz com folga.
+        iframeBridgeTimeout: 4000,
+      },
     });
     msalInit = msalInstance.initialize();
   }

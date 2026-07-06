@@ -54,6 +54,9 @@ export default function EmaChatWidget({
   const handleSend = async () => {
     const message = input.trim();
     if (!message || busy) return;
+    // Login pendente: o aviso com o botão já está na tela — repetir o
+    // caminho silencioso só faria o usuário esperar outro timeout.
+    if (status === "needs_login") return;
     setInput("");
     const pageContext = buildPageContext(
       window.location.origin,
