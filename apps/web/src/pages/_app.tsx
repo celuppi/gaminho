@@ -12,12 +12,18 @@ import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 import { useEffect } from "react";
 
+import { installEmaAuthBridge } from "~/components/ema-chat/authBridge";
 import { EmaChatLoader } from "~/components/ema-chat/EmaChatLoader";
 import { KeyboardShortcutProvider } from "~/providers/keyboard-shortcuts";
 import { LinguiProviderWrapper } from "~/providers/lingui";
 import { ModalProvider } from "~/providers/modal";
 import { PopupProvider } from "~/providers/popup";
 import { api } from "~/utils/api";
+
+// Escopo de módulo de propósito: numa janela de retorno de auth do widget
+// da EMA, o broadcast precisa disparar antes da hidratação/router (ver
+// comentário em authBridge.ts). No-op em qualquer navegação normal.
+installEmaAuthBridge();
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
