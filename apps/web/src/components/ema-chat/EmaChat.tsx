@@ -1,9 +1,11 @@
 // Widget da EMA no Kanban: botão flutuante + painel lateral de chat.
 // Auto-contido: não renderiza sem sessão Better Auth ou sem as envs
 // NEXT_PUBLIC_EMA_* (fail-soft). Contexto de tela vai em cada mensagem.
+import type { Components } from "react-markdown";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 import type { EmaEnv } from "./emaEnv";
 
@@ -15,6 +17,19 @@ import { useEmaChat } from "./useEmaChat";
 function stripSuggestions(content: string): string {
   return content.replace(/<suggestions>[\s\S]*?<\/suggestions>/g, "").trim();
 }
+
+// Links em nova aba (o link do card não deve engolir o board aberto) e
+// tabelas roláveis — o painel tem 400px e as respostas de BI vêm largas.
+const markdownComponents: Components = {
+  a: ({ node: _node, ...props }) => (
+    <a {...props} target="_blank" rel="noreferrer" />
+  ),
+  table: ({ node: _node, ...props }) => (
+    <div className="overflow-x-auto">
+      <table {...props} />
+    </div>
+  ),
+};
 
 const MSG_ENTRAR = "Para falar com a EMA, entre com sua conta Microsoft.";
 const MSG_POPUP_BLOQUEADO =
@@ -150,7 +165,10 @@ export default function EmaChatWidget({
                   key={i}
                   className="prose prose-sm dark:prose-invert mr-4 max-w-none text-sm text-neutral-900 dark:text-dark-1000"
                 >
-                  <ReactMarkdown>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={markdownComponents}
+                  >
                     {stripSuggestions(m.content) ||
                       (busy && i === messages.length - 1 ? "…" : "")}
                   </ReactMarkdown>
