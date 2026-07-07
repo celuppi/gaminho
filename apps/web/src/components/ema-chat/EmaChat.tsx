@@ -43,7 +43,7 @@ export default function EmaChatWidget({
   const [loggingIn, setLoggingIn] = useState(false);
   const router = useRouter();
   const { status, getToken, loginWithPopup, warmUp } = useEmaAuth(loginHint);
-  const { messages, busy, error, send, reset } = useEmaChat();
+  const { messages, busy, error, send, reset } = useEmaChat(loginHint);
 
   // Aquecimento ao abrir o painel: resolve o initialize() do MSAL e tenta o
   // caminho silencioso — assim o clique em "Entrar com Microsoft" (se

@@ -1,6 +1,9 @@
 // Estado do chat com a EMA: cria a sessão na primeira mensagem e consome o
 // SSE do POST /api/v2/chat via fetch streaming (EventSource não faz POST).
-import { useCallback, useRef, useState } from "react";
+// Histórico persistido em localStorage (por usuário): reload restaura as
+// mensagens e continua a MESMA sessão do servidor — o backend da EMA é a
+// fonte de verdade, aqui é só o cache de exibição.
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface EmaMessage {
   role: "user" | "assistant";
@@ -26,17 +29,97 @@ const MSG_SEM_ACESSO =
 const MSG_ERRO_GENERICO =
   "Não consegui falar com a EMA agora. Tente novamente em instantes.";
 
-export function useEmaChat() {
-  const [messages, setMessages] = useState<EmaMessage[]>([]);
+export interface PersistedChat {
+  sessionId: string | null;
+  messages: EmaMessage[];
+}
+
+const STORAGE_PREFIX = "ema-chat.v1";
+/** Teto de mensagens persistidas — o histórico completo vive no servidor. */
+const PERSIST_MAX_MESSAGES = 100;
+
+function storageKeyFor(userKey: string): string {
+  return `${STORAGE_PREFIX}.${userKey.toLowerCase()}`;
+}
+
+/**
+ * Valida o JSON cru vindo do localStorage (pode ser de versão antiga do
+ * widget ou corrompido). Descarta mensagens malformadas e as vazias —
+ * um placeholder de resposta interrompida no meio do stream, por exemplo.
+ */
+export function parsePersistedChat(raw: string | null): PersistedChat | null {
+  if (!raw) return null;
+  try {
+    const data = JSON.parse(raw) as { sessionId?: unknown; messages?: unknown };
+    if (!Array.isArray(data.messages)) return null;
+    const messages = data.messages.filter((m: unknown): m is EmaMessage => {
+      if (typeof m !== "object" || m === null) return false;
+      const { role, content } = m as { role?: unknown; content?: unknown };
+      return (
+        (role === "user" || role === "assistant") &&
+        typeof content === "string" &&
+        content.trim() !== ""
+      );
+    });
+    return {
+      sessionId: typeof data.sessionId === "string" ? data.sessionId : null,
+      messages,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function loadPersistedChat(storageKey: string): PersistedChat | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return parsePersistedChat(window.localStorage.getItem(storageKey));
+  } catch {
+    return null;
+  }
+}
+
+export function useEmaChat(userKey: string) {
+  const storageKey = storageKeyFor(userKey);
+  const [restored] = useState(() => loadPersistedChat(storageKey));
+  const [messages, setMessages] = useState<EmaMessage[]>(
+    restored?.messages ?? [],
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const sessionRef = useRef<string | null>(null);
+  const sessionRef = useRef<string | null>(restored?.sessionId ?? null);
+
+  // Persiste quando o turno termina (não a cada chunk do stream). Falha de
+  // quota/modo privado só degrada para histórico em memória.
+  useEffect(() => {
+    if (busy) return;
+    try {
+      if (messages.length === 0) {
+        window.localStorage.removeItem(storageKey);
+        return;
+      }
+      const persisted: PersistedChat = {
+        sessionId: sessionRef.current,
+        messages: messages
+          .filter((m) => m.content.trim() !== "")
+          .slice(-PERSIST_MAX_MESSAGES),
+      };
+      window.localStorage.setItem(storageKey, JSON.stringify(persisted));
+    } catch {
+      // sem localStorage disponível — segue só em memória
+    }
+  }, [messages, busy, storageKey]);
 
   const reset = useCallback(() => {
     sessionRef.current = null;
     setMessages([]);
     setError(null);
-  }, []);
+    try {
+      window.localStorage.removeItem(storageKey);
+    } catch {
+      // sem localStorage disponível — nada a limpar
+    }
+  }, [storageKey]);
 
   const appendToAssistant = useCallback((chunk: string) => {
     setMessages((m) => {
