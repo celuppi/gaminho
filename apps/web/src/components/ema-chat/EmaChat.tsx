@@ -3,7 +3,7 @@
 // NEXT_PUBLIC_EMA_* (fail-soft). Contexto de tela vai em cada mensagem.
 import type { Components } from "react-markdown";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -59,6 +59,26 @@ export default function EmaChatWidget({
   const router = useRouter();
   const { status, getToken, loginWithPopup, warmUp } = useEmaAuth(loginHint);
   const { messages, busy, error, send, reset } = useEmaChat(loginHint);
+  const messagesRef = useRef<HTMLDivElement | null>(null);
+  // Gruda no fim da conversa (abrir o painel, streaming) — solta quando o
+  // usuário rola para cima para reler e volta a grudar se ele rolar ao fim.
+  const stickToBottomRef = useRef(true);
+
+  useEffect(() => {
+    if (open) stickToBottomRef.current = true;
+  }, [open]);
+
+  useEffect(() => {
+    const el = messagesRef.current;
+    if (el && stickToBottomRef.current) el.scrollTop = el.scrollHeight;
+  }, [open, messages, error, status]);
+
+  const handleMessagesScroll = () => {
+    const el = messagesRef.current;
+    if (!el) return;
+    stickToBottomRef.current =
+      el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+  };
 
   // Aquecimento ao abrir o painel: resolve o initialize() do MSAL e tenta o
   // caminho silencioso — assim o clique em "Entrar com Microsoft" (se
@@ -144,7 +164,11 @@ export default function EmaChatWidget({
             </div>
           </div>
 
-          <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
+          <div
+            ref={messagesRef}
+            onScroll={handleMessagesScroll}
+            className="flex-1 space-y-3 overflow-y-auto px-4 py-3"
+          >
             {messages.length === 0 && (
               <p className="text-sm text-neutral-500 dark:text-dark-900">
                 Pergunte sobre suas tarefas — por exemplo: “quais são minhas
