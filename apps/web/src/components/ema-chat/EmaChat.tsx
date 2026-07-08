@@ -1,35 +1,16 @@
 // Widget da EMA no Kanban: botão flutuante + painel lateral de chat.
 // Auto-contido: não renderiza sem sessão Better Auth ou sem as envs
 // NEXT_PUBLIC_EMA_* (fail-soft). Contexto de tela vai em cada mensagem.
-import type { Components } from "react-markdown";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 
 import type { EmaEnv } from "./emaEnv";
 
 import { buildPageContext } from "./pageContext";
+import EmaLauncher from "./EmaLauncher";
+import MessageBubble from "./MessageBubble";
 import { useEmaAuth } from "./useEmaAuth";
 import { useEmaChat } from "./useEmaChat";
-
-/** Remove a tag <suggestions> que a EMA anexa para o app dela. */
-function stripSuggestions(content: string): string {
-  return content.replace(/<suggestions>[\s\S]*?<\/suggestions>/g, "").trim();
-}
-
-// Links em nova aba (o link do card não deve engolir o board aberto) e
-// tabelas roláveis — o painel tem 400px e as respostas de BI vêm largas.
-const markdownComponents: Components = {
-  a: ({ node: _node, ...props }) => (
-    <a {...props} target="_blank" rel="noreferrer" />
-  ),
-  table: ({ node: _node, ...props }) => (
-    <div className="overflow-x-auto">
-      <table {...props} />
-    </div>
-  ),
-};
 
 const MSG_ENTRAR = "Para falar com a EMA, entre com sua conta Microsoft.";
 const MSG_POPUP_BLOQUEADO =
@@ -87,8 +68,8 @@ export default function EmaChatWidget({
     if (open) void warmUp();
   }, [open, warmUp]);
 
-  const handleSend = async () => {
-    const message = input.trim();
+  const handleSend = async (overrideMessage?: string) => {
+    const message = (overrideMessage ?? input).trim();
     if (!message || busy) return;
     // Login pendente: o aviso com o botão já está na tela — repetir o
     // caminho silencioso só faria o usuário esperar outro timeout.
@@ -110,6 +91,12 @@ export default function EmaChatWidget({
     if (outcome === "auth") setInput(message);
   };
 
+  // Enviar a partir do campo flutuante: abre o painel e dispara a pergunta.
+  const handleLaunch = (text: string) => {
+    setOpen(true);
+    void handleSend(text);
+  };
+
   // Chamado DIRETO do onClick: o popup precisa carregar o gesto do usuário
   // (Safari bloqueia popups abertos depois de awaits longos).
   const handleLogin = () => {
@@ -128,14 +115,9 @@ export default function EmaChatWidget({
   return (
     <>
       {!open && (
-        <button
-          type="button"
-          aria-label="Conversar com a EMA"
-          onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-violet-600 text-lg font-semibold text-white shadow-lg hover:bg-violet-700"
-        >
-          E
-        </button>
+        <div className="fixed bottom-5 left-0 right-0 z-50 flex justify-center px-4">
+          <EmaLauncher onSubmit={handleLaunch} />
+        </div>
       )}
 
       {open && (
@@ -176,29 +158,13 @@ export default function EmaChatWidget({
                 tarefa?”.
               </p>
             )}
-            {messages.map((m, i) =>
-              m.role === "user" ? (
-                <div
-                  key={i}
-                  className="ml-8 rounded-lg bg-violet-600/10 px-3 py-2 text-sm text-neutral-900 dark:text-dark-1000"
-                >
-                  {m.content}
-                </div>
-              ) : (
-                <div
-                  key={i}
-                  className="prose prose-sm dark:prose-invert mr-4 max-w-none text-sm text-neutral-900 dark:text-dark-1000"
-                >
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={markdownComponents}
-                  >
-                    {stripSuggestions(m.content) ||
-                      (busy && i === messages.length - 1 ? "…" : "")}
-                  </ReactMarkdown>
-                </div>
-              ),
-            )}
+            {messages.map((m, i) => (
+              <MessageBubble
+                key={i}
+                message={m}
+                isTyping={busy && i === messages.length - 1}
+              />
+            ))}
             {status === "needs_login" && (
               <div className="rounded-lg bg-violet-600/10 px-3 py-2 text-sm text-neutral-900 dark:text-dark-1000">
                 <p>{MSG_ENTRAR}</p>
