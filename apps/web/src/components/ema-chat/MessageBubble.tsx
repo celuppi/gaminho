@@ -1,5 +1,9 @@
+// apps/web/src/components/ema-chat/MessageBubble.tsx
+// Um balão de mensagem do chat da EMA: usuário (direita) ou assistente
+// (avatar + markdown). Entrada animada (fade/slide). Enquanto a resposta
+// ainda não chegou, mostra o indicador de digitação.
 import type { Components } from "react-markdown";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -43,7 +47,10 @@ const markdownComponents: Components = {
 
 function EmaAvatar() {
   return (
-    <span className="mt-0.5 flex h-6 w-6 shrink-0 select-none items-center justify-center rounded-full bg-violet-600 text-xs font-semibold text-white">
+    <span
+      aria-hidden="true"
+      className="mt-0.5 flex h-6 w-6 shrink-0 select-none items-center justify-center rounded-full bg-violet-600 text-xs font-semibold text-white"
+    >
       E
     </span>
   );
@@ -57,11 +64,14 @@ export default function MessageBubble({
   isTyping?: boolean;
 }) {
   const isUser = message.role === "user";
-  const text = isUser ? message.content : stripSuggestions(message.content);
+  const text = stripSuggestions(message.content);
+  const reduce = useReducedMotion();
+
+  if (!isUser && !text && !isTyping) return null;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={reduce ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
       className={isUser ? "flex justify-end" : "flex gap-2"}
