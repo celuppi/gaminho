@@ -476,7 +476,7 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                 {...register("name")}
                 onBlur={canEditBoard ? handleSubmit(onSubmit) : undefined}
                 readOnly={!canEditBoard}
-                className="block border-0 bg-transparent p-0 py-0 font-bold leading-[2.3rem] tracking-tight text-neutral-900 focus:ring-0 focus-visible:outline-none disabled:cursor-not-allowed dark:text-dark-1000 sm:text-[1.2rem]"
+                className="block w-full border-0 bg-transparent p-0 py-0 font-bold leading-[2.3rem] tracking-tight text-neutral-900 focus:ring-0 focus-visible:outline-none disabled:cursor-not-allowed dark:text-dark-1000 sm:text-[1.2rem]"
               />
             </form>
           )}

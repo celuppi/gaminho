@@ -13,7 +13,6 @@ import { Tooltip } from "~/components/Tooltip";
 import { usePermissions } from "~/hooks/usePermissions";
 import { useModal } from "~/providers/modal";
 import { useWorkspace } from "~/providers/workspace";
-import { criticalityStyles } from "~/utils/criticality";
 import { api } from "~/utils/api";
 
 export function BoardsList({ isTemplate }: { isTemplate?: boolean }) {
@@ -135,39 +134,29 @@ export function BoardsList({ isTemplate }: { isTemplate?: boolean }) {
                 <p className="text-[14px] font-bold text-neutral-700 dark:text-dark-1000">
                   {board.name}
                 </p>
-                <div className="flex gap-1.5">
-                  {(["Urgente", "Importante", "Média", "Baixa"] as const).map(
-                    (crit) => {
-                      const count = (
-                        board as unknown as {
-                          lists: { cards: { criticality: string | null }[] }[];
-                        }
-                      ).lists.reduce((acc, list) => {
-                        return (
-                          acc +
-                          (list.cards.filter((c) => c.criticality === crit)
-                            .length || 0)
-                        );
-                      }, 0);
-
-                      if (!count) return null;
-
-                      return (
-                        <div
-                          key={crit}
-                          className="flex items-center gap-1"
-                          title={`${count} ${crit}`}
-                        >
-                          <div
-                            className={`h-2 w-2 rounded-full ${criticalityStyles[crit].dot}`}
-                          />
-                          <span className="text-[10px] font-medium text-neutral-500 dark:text-dark-800">
-                            {count}
-                          </span>
-                        </div>
-                      );
-                    },
-                  )}
+                <div className="flex max-w-full flex-wrap justify-center gap-x-3 gap-y-1">
+                  {(
+                    board as unknown as {
+                      lists: {
+                        publicId: string;
+                        name: string;
+                        cards: unknown[];
+                      }[];
+                    }
+                  ).lists.map((list) => (
+                    <div
+                      key={list.publicId}
+                      className="flex items-center gap-1"
+                      title={`${list.name}: ${list.cards.length}`}
+                    >
+                      <span className="max-w-[90px] truncate text-[10px] font-medium text-neutral-500 dark:text-dark-800">
+                        {list.name}
+                      </span>
+                      <span className="text-[10px] font-semibold text-neutral-700 dark:text-dark-1000">
+                        {list.cards.length}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

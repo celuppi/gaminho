@@ -1045,6 +1045,10 @@ msgstr "Editando"
 msgid "email"
 msgstr "e-mail"
 
+#: src/components/AuthForm.tsx:395
+msgid "external email"
+msgstr "e-mail externo"
+
 #: src/views/members/components/InviteMemberForm.tsx:272
 #: src/views/settings/AccountSettings.tsx:42
 msgid "Email"

@@ -77,7 +77,7 @@ const availableSocialProviders = {
   },
   microsoft: {
     id: "microsoft",
-    name: "Microsoft",
+    name: "Login da Baggio",
     icon: FaMicrosoft,
   },
   facebook: {
@@ -159,6 +159,7 @@ export function Auth({ setIsMagicLinkSent, isSignUp }: AuthProps) {
   const [isCredentialsEnabled, setIsCredentialsEnabled] = useState(false);
   const [isEmailSendingEnabled, setIsEmailSendingEnabled] = useState(false);
   const [isLoginWithEmailPending, setIsLoginWithEmailPending] = useState(false);
+  const [isEmailExpanded, setIsEmailExpanded] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const { showPopup } = usePopup();
   const oidcProviderName = "OIDC";
@@ -372,7 +373,7 @@ export function Auth({ setIsMagicLinkSent, isSignUp }: AuthProps) {
           </div>
         )}
       {(isCredentialsEnabled || isMagicLinkAvailable) && (
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <div>
           {socialProviders?.length !== 0 && (
             <div className="mb-[1.5rem] flex w-full items-center gap-4">
               <div className="h-[1px] w-full bg-light-600 dark:bg-dark-600" />
@@ -382,63 +383,78 @@ export function Auth({ setIsMagicLinkSent, isSignUp }: AuthProps) {
               <div className="h-[1px] w-full bg-light-600 dark:bg-dark-600" />
             </div>
           )}
-          <div className="space-y-2">
-            {isSignUp && isCredentialsEnabled && (
-              <div>
-                <Input
-                  {...register("name", { required: true })}
-                  placeholder={t`Enter your name`}
-                />
-                {errors.name && (
-                  <p className="mt-2 text-xs text-red-400">
-                    {t`Please enter a valid name`}
-                  </p>
-                )}
-              </div>
-            )}
-            <div>
-              <Input
-                {...register("email", { required: true })}
-                placeholder={t`Enter your email address`}
-              />
-              {errors.email && (
-                <p className="mt-2 text-xs text-red-400">
-                  {t`Please enter a valid email address`}
-                </p>
-              )}
-            </div>
-
-            {isCredentialsEnabled && (
-              <div>
-                <Input
-                  type="password"
-                  {...register("password", { required: true })}
-                  placeholder={t`Enter your password`}
-                />
-                {errors.password && (
-                  <p className="mt-2 text-xs text-red-400">
-                    {errors.password.message ??
-                      t`Please enter a valid password`}
-                  </p>
-                )}
-              </div>
-            )}
-            {loginError && (
-              <p className="mt-2 text-xs text-red-400">{loginError}</p>
-            )}
-          </div>
-          <div className="mt-[1.5rem] flex items-center gap-4">
+          {!isEmailExpanded ? (
             <Button
-              isLoading={isLoginWithEmailPending}
+              type="button"
+              onClick={() => setIsEmailExpanded(true)}
               fullWidth
               size="lg"
               variant="secondary"
             >
               {isSignUp ? t`Sign up with ` : t`Continue with `}
-              {isMagicLinkMode ? t`magic link` : t`email`}
+              {t`external email`}
             </Button>
-          </div>
-        </form>
+          ) : (
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <div className="space-y-2">
+                {isSignUp && isCredentialsEnabled && (
+                  <div>
+                    <Input
+                      {...register("name", { required: true })}
+                      placeholder={t`Enter your name`}
+                    />
+                    {errors.name && (
+                      <p className="mt-2 text-xs text-red-400">
+                        {t`Please enter a valid name`}
+                      </p>
+                    )}
+                  </div>
+                )}
+                <div>
+                  <Input
+                    {...register("email", { required: true })}
+                    placeholder={t`Enter your email address`}
+                  />
+                  {errors.email && (
+                    <p className="mt-2 text-xs text-red-400">
+                      {t`Please enter a valid email address`}
+                    </p>
+                  )}
+                </div>
+
+                {isCredentialsEnabled && (
+                  <div>
+                    <Input
+                      type="password"
+                      {...register("password", { required: true })}
+                      placeholder={t`Enter your password`}
+                    />
+                    {errors.password && (
+                      <p className="mt-2 text-xs text-red-400">
+                        {errors.password.message ??
+                          t`Please enter a valid password`}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {loginError && (
+                  <p className="mt-2 text-xs text-red-400">{loginError}</p>
+                )}
+              </div>
+              <div className="mt-[1.5rem] flex items-center gap-4">
+                <Button
+                  isLoading={isLoginWithEmailPending}
+                  fullWidth
+                  size="lg"
+                  variant="secondary"
+                >
+                  {isSignUp ? t`Sign up with ` : t`Continue with `}
+                  {isMagicLinkMode ? t`magic link` : t`email`}
+                </Button>
+              </div>
+            </form>
+          )}
+        </div>
       )}
       {!(isCredentialsEnabled || isMagicLinkAvailable) && loginError && (
         <p className="mt-2 text-xs text-red-400">{loginError}</p>
